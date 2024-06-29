@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Hero from './components/Hero';
 import Workout from './components/CurrentWorkout';
 import Navbar from './components/Navbar';
 import AddExercise from './components/AddExercise';
 
-function App() {
-  const [count, setCount] = useState(0);
+interface Exercise {
+  name: string;
+  weightProgression: number[];
+}
+
+const App: React.FC = () => {
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+
+  const addExercise = (exercise: Exercise) => {
+    setExercises([...exercises, exercise]);
+  };
 
   return (
     <Router>
@@ -15,11 +24,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Hero />} />
           <Route path="/workout" element={<Workout />} />
-          <Route path="/addexercise" element={<AddExercise />} />
+          <Route path="/addexercise" element={<AddExercise addExercise={addExercise} />} />
         </Routes>
       </main>
     </Router>
   );
-}
+};
 
 export default App;

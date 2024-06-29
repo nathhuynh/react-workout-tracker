@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 
-export default function AddExercise({ addExercise }) {
-  const [exerciseName, setExerciseName] = useState('');
+interface AddExerciseProps {
+  addExercise: (exercise: { name: string; weightProgression: number[] }) => void;
+}
 
-  const handleSubmit = (e) => {
+const AddExercise: React.FC<AddExerciseProps> = ({ addExercise }) => {
+  const [exerciseName, setExerciseName] = useState<string>('');
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (exerciseName) {
       addExercise({ name: exerciseName, weightProgression: [] });
@@ -19,7 +23,7 @@ export default function AddExercise({ addExercise }) {
           type="text"
           placeholder="Exercise Name"
           value={exerciseName}
-          onChange={(e) => setExerciseName(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setExerciseName(e.target.value)}
           className="p-2 rounded"
         />
         <button type="submit" className="bg-blue-700 px-4 py-2 rounded text-white">
@@ -28,4 +32,6 @@ export default function AddExercise({ addExercise }) {
       </form>
     </div>
   );
-}
+};
+
+export default AddExercise;

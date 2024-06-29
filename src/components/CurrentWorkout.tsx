@@ -1,10 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { fetchExercises } from '../utils/exerciseService';
 
-export default function CurrentWorkout() {
-  const [exercises, setExercises] = useState([]);
-  const [customExercises, setCustomExercises] = useState([]);
-  const [workoutExercises, setWorkoutExercises] = useState(() => {
+interface Exercise {
+  name: string;
+  sets: {
+    weight: string;
+    reps: string;
+    rir: string;
+  }[];
+}
+
+const CurrentWorkout: React.FC = () => {
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
+  const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>(() => {
     const savedExercises = localStorage.getItem('workoutExercises');
     return savedExercises ? JSON.parse(savedExercises) : [];
   });
@@ -16,7 +25,7 @@ export default function CurrentWorkout() {
   // Fetch exercise data and load saved workout
   useEffect(() => {
     const loadExercises = async () => {
-      const data = await fetchExercises();
+      const data: Exercise[] = await fetchExercises();
       setExercises(data);
     };
     loadExercises();
@@ -30,39 +39,44 @@ export default function CurrentWorkout() {
     localStorage.setItem('workoutNotes', notes);
   }, [notes]);
 
-  const handleAddSet = (exerciseIndex) => {
+  const handleAddSet = (exerciseIndex: number) => {
     const newExercises = [...workoutExercises];
     newExercises[exerciseIndex].sets.push({ weight: '', reps: '', rir: '' });
     setWorkoutExercises(newExercises);
   };
 
-  const handleRemoveSet = (exerciseIndex, setIndex) => {
+  const handleRemoveSet = (exerciseIndex: number, setIndex: number) => {
     const newExercises = [...workoutExercises];
     newExercises[exerciseIndex].sets.splice(setIndex, 1);
     setWorkoutExercises(newExercises);
   };
 
-  const handleInputChange = (exerciseIndex, setIndex, field, value) => {
+  const handleInputChange = (
+    exerciseIndex: number,
+    setIndex: number,
+    field: 'weight' | 'reps' | 'rir',
+    value: string
+  ) => {
     const newExercises = [...workoutExercises];
     newExercises[exerciseIndex].sets[setIndex][field] = value;
     setWorkoutExercises(newExercises);
   };
 
-  const addWorkoutExercise = (exerciseName) => {
+  const addWorkoutExercise = (exerciseName: string) => {
     setWorkoutExercises([
       ...workoutExercises,
       { name: exerciseName, sets: [{ weight: '', reps: '', rir: '' }] },
     ]);
   };
 
-  const handleRemoveExercise = (exerciseIndex) => {
+  const handleRemoveExercise = (exerciseIndex: number) => {
     const newExercises = [...workoutExercises];
     newExercises.splice(exerciseIndex, 1);
     setWorkoutExercises(newExercises);
   };
 
-  const addCustomExercise = (exerciseName) => {
-    setCustomExercises([...customExercises, { name: exerciseName }]);
+  const addCustomExercise = (exerciseName: string) => {
+    setCustomExercises([...customExercises, { name: exerciseName, sets: [] }]);
   };
 
   const allExercises = [...exercises, ...customExercises];
@@ -75,7 +89,7 @@ export default function CurrentWorkout() {
       </div>
       <div className="mb-4">
         <label className="block mb-2">Add Exercise</label>
-        <select onChange={(e) => addWorkoutExercise(e.target.value)} className="p-2 rounded">
+        <select onChange={(e: ChangeEvent<HTMLSelectElement>) => addWorkoutExercise(e.target.value)} className="p-2 rounded">
           <option value="">Select an exercise</option>
           {allExercises.map((exercise, index) => (
             <option className="text-black" key={index} value={exercise.name}>
@@ -103,7 +117,7 @@ export default function CurrentWorkout() {
                   type="text"
                   placeholder="Weight"
                   value={set.weight}
-                  onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
                   className="w-full p-2 rounded text-black"
                 />
               </div>
@@ -113,7 +127,7 @@ export default function CurrentWorkout() {
                   type="text"
                   placeholder="Reps"
                   value={set.reps}
-                  onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
                   className="w-full p-2 rounded text-black"
                 />
               </div>
@@ -123,7 +137,7 @@ export default function CurrentWorkout() {
                   type="text"
                   placeholder="RIR"
                   value={set.rir}
-                  onChange={(e) => handleInputChange(exerciseIndex, setIndex, 'rir', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseIndex, setIndex, 'rir', e.target.value)}
                   className="w-full p-2 rounded text-black"
                 />
               </div>
@@ -148,7 +162,7 @@ export default function CurrentWorkout() {
         <input
           type="text"
           placeholder="Exercise Name"
-          onBlur={(e) => addCustomExercise(e.target.value)}
+          onBlur={(e: ChangeEvent<HTMLInputElement>) => addCustomExercise(e.target.value)}
           className="p-2 rounded"
         />
       </div> */}
@@ -156,11 +170,13 @@ export default function CurrentWorkout() {
         <label className="block mb-2">Notes</label>
         <textarea
           className="w-full p-2 rounded text-black"
-          rows="4"
+          rows={4}
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
         ></textarea>
       </div>
     </div>
   );
-}
+};
+
+export default CurrentWorkout;
