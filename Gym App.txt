@@ -12,13 +12,14 @@ Page Structure
 Section for each exercise
 => Set # / Weight / Rep Count -+ / RIR ✓
 => Add/remove sets -+ ✓
+=> Weight / Reps / RIR Dropdown lists✓
+=> Autofill the rest of the sets after the first set ✓
+- Notes section at the bottom of each session ✓
 
-=> Weight / Reps / RIR Dropdown lists
-=> "Tick Done" button for each Set
+=> "Tick Done" button for each Set 
 => Add/remove dropsets -+
-=> Autofill the rest of the sets after the first set
-- Notes section at the bottom of each session
 => Add Custom Exercise and have it save to JSON exercise list
+=> Move Remove Exercise, Add/Remove Set, Add/Remove Dropset, etc to dropdown list (more clean)
 
 2) RP Hypertrophy App Style Mesocycle Creation
 - Pick weekly frequency

@@ -1,28 +1,26 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
-import { fetchExercises } from '../utils/exerciseService';
+import { fetchExercises, Exercise } from '../utils/exerciseService';
 
-interface Exercise {
-  name: string;
-  sets: {
-    weight: string;
-    reps: string;
-    rir: string;
-  }[];
+interface Set {
+  weight: number;
+  reps: number;
+  logged: boolean;
 }
+
+type ExerciseMap = Map<string, Set[]>;
 
 const CurrentWorkout: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
-  const [workoutExercises, setWorkoutExercises] = useState<Exercise[]>(() => {
+  const [workoutExercises, setWorkoutExercises] = useState<ExerciseMap>(() => {
     const savedExercises = localStorage.getItem('workoutExercises');
-    return savedExercises ? JSON.parse(savedExercises) : [];
+    return savedExercises ? new Map(JSON.parse(savedExercises)) : new Map();
   });
   const [notes, setNotes] = useState(() => {
     const savedNotes = localStorage.getItem('workoutNotes');
     return savedNotes ? savedNotes : '';
   });
 
-  // Fetch exercise data and load saved workout
   useEffect(() => {
     const loadExercises = async () => {
       const data: Exercise[] = await fetchExercises();
@@ -32,51 +30,90 @@ const CurrentWorkout: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('workoutExercises', JSON.stringify(workoutExercises));
+    localStorage.setItem('workoutExercises', JSON.stringify(Array.from(workoutExercises.entries())));
   }, [workoutExercises]);
 
   useEffect(() => {
     localStorage.setItem('workoutNotes', notes);
   }, [notes]);
 
-  const handleAddSet = (exerciseIndex: number) => {
-    const newExercises = [...workoutExercises];
-    newExercises[exerciseIndex].sets.push({ weight: '', reps: '', rir: '' });
-    setWorkoutExercises(newExercises);
+  const handleAddSet = (exerciseName: string) => {
+    setWorkoutExercises(prev => {
+      const updated = new Map(prev);
+      const sets = [...(updated.get(exerciseName) || [])];
+      const lastSet = sets[sets.length - 1] || { weight: 0, reps: 0, logged: false };
+      sets.push({ weight: lastSet.weight, reps: lastSet.reps, logged: false });
+      updated.set(exerciseName, sets);
+      return updated;
+    });
   };
 
-  const handleRemoveSet = (exerciseIndex: number, setIndex: number) => {
-    const newExercises = [...workoutExercises];
-    newExercises[exerciseIndex].sets.splice(setIndex, 1);
-    setWorkoutExercises(newExercises);
+  const handleRemoveSet = (exerciseName: string, setIndex: number) => {
+    setWorkoutExercises(prev => {
+      const updated = new Map(prev);
+      const sets = updated.get(exerciseName) || [];
+      sets.splice(setIndex, 1);
+      if (sets.length === 0) {
+        updated.delete(exerciseName);
+      } else {
+        updated.set(exerciseName, sets);
+      }
+      return updated;
+    });
   };
 
-  const handleInputChange = (
-    exerciseIndex: number,
-    setIndex: number,
-    field: 'weight' | 'reps' | 'rir',
-    value: string
-  ) => {
-    const newExercises = [...workoutExercises];
-    newExercises[exerciseIndex].sets[setIndex][field] = value;
-    setWorkoutExercises(newExercises);
+  const handleInputChange = (exerciseName: string, setIndex: number, field: keyof Set, value: number) => {
+    setWorkoutExercises(prev => {
+      const updated = new Map(prev);
+      const sets = updated.get(exerciseName) || [];
+      sets[setIndex] = { ...sets[setIndex], [field]: value };
+      updated.set(exerciseName, sets);
+      return updated;
+    });
+  };
+
+  const handleLogSet = (exerciseName: string, setIndex: number) => {
+    setWorkoutExercises(prev => {
+      const updated = new Map(prev);
+      const sets = updated.get(exerciseName) || [];
+      sets[setIndex].logged = true;
+      updated.set(exerciseName, sets);
+      return updated;
+    });
   };
 
   const addWorkoutExercise = (exerciseName: string) => {
-    setWorkoutExercises([
-      ...workoutExercises,
-      { name: exerciseName, sets: [{ weight: '', reps: '', rir: '' }] },
-    ]);
+    setWorkoutExercises(prev => {
+      const updated = new Map(prev);
+      if (!updated.has(exerciseName)) {
+        updated.set(exerciseName, [{ weight: 0, reps: 0, logged: false }]);
+      }
+      return updated;
+    });
   };
 
-  const handleRemoveExercise = (exerciseIndex: number) => {
-    const newExercises = [...workoutExercises];
-    newExercises.splice(exerciseIndex, 1);
-    setWorkoutExercises(newExercises);
+  const handleRemoveExercise = (exerciseName: string) => {
+    setWorkoutExercises(prev => {
+      const updated = new Map(prev);
+      updated.delete(exerciseName);
+      return updated;
+    });
   };
 
-  const addCustomExercise = (exerciseName: string) => {
-    setCustomExercises([...customExercises, { name: exerciseName, sets: [] }]);
+  const generateWeightOptions = () => {
+    const options = [];
+    for (let i = 1; i <= 10; i++) {
+      options.push(i);
+    }
+    options.push(7.5);
+    for (let i = 10.25; i <= 300; i += 0.25) {
+      options.push(parseFloat(i.toFixed(2)));
+    }
+    return options;
+  };
+
+  const generateRepsOptions = (max: number) => {
+    return Array.from({ length: max }, (_, i) => i + 1);
   };
 
   const allExercises = [...exercises, ...customExercises];
@@ -98,74 +135,96 @@ const CurrentWorkout: React.FC = () => {
           ))}
         </select>
       </div>
-      {workoutExercises.map((exercise, exerciseIndex) => (
+      {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => (
         <div key={exerciseIndex} className="mb-6 p-4 bg-gray-800 rounded">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg mb-2">{exercise.name}</h3>
+            <h3 className="text-lg mb-2">{exerciseName}</h3>
             <button
-              onClick={() => handleRemoveExercise(exerciseIndex)}
+              onClick={() => handleRemoveExercise(exerciseName)}
               className="bg-red-700 px-2 py-1 rounded"
             >
               Remove Exercise
             </button>
           </div>
-          {exercise.sets.map((set, setIndex) => (
-            <div key={setIndex} className="flex items-center mb-2">
-              <div className="flex-1 mr-2">
-                <label className="block">Set {setIndex + 1}</label>
-                <input
-                  type="text"
-                  placeholder="Weight"
-                  value={set.weight}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-                  className="w-full p-2 rounded text-black"
-                />
+          {sets && sets.length > 0 ? (
+            <>
+              <div className="grid grid-cols-4 gap-4 items-center">
+                <div className="uppercase">Set</div>
+                <div className="uppercase">Weight (kg)</div>
+                <div className="uppercase">Reps</div>
+                <div></div>
               </div>
-              <div className="flex-1 mr-2">
-                <label className="block">Reps</label>
-                <input
-                  type="text"
-                  placeholder="Reps"
-                  value={set.reps}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-                  className="w-full p-2 rounded text-black"
-                />
+              <div className="flex flex-col space-y-2">
+                {sets.map((set, setIndex) => (
+                  <div key={setIndex} className="grid grid-cols-4 gap-4 items-center">
+                    <div className="flex items-center justify-center">{setIndex + 1}</div>
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        placeholder="ENTER"
+                        value={set.weight || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseName, setIndex, 'weight', Number(e.target.value))}
+                        className="w-full p-2 rounded text-black"
+                        list={`weight-options-${exerciseIndex}-${setIndex}`}
+                      />
+                      <datalist id={`weight-options-${exerciseIndex}-${setIndex}`}>
+                        {generateWeightOptions().map(option => (
+                          <option key={option} value={option} />
+                        ))}
+                      </datalist>
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        placeholder="ENTER"
+                        value={set.reps || ''}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseName, setIndex, 'reps', Number(e.target.value))}
+                        className="w-full p-2 rounded text-black"
+                        list={`reps-options-${exerciseIndex}-${setIndex}`}
+                      />
+                      <datalist id={`reps-options-${exerciseIndex}-${setIndex}`}>
+                        {generateRepsOptions(30).map(option => (
+                          <option key={option} value={option} />
+                        ))}
+                      </datalist>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      {set.logged ? (
+                        <span>✔️</span>
+                      ) : (
+                        <button
+                          onClick={() => handleLogSet(exerciseName, setIndex)}
+                          className="bg-blue-700 px-4 py-2 rounded"
+                        >
+                          Log Set
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex-1 mr-2">
-                <label className="block">RIR</label>
-                <input
-                  type="text"
-                  placeholder="RIR"
-                  value={set.rir}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseIndex, setIndex, 'rir', e.target.value)}
-                  className="w-full p-2 rounded text-black"
-                />
-              </div>
+            </>
+          ) : (
+            <p>No sets available.</p>
+          )}
+          <div className="flex space-x-2 mt-2">
+            <button
+              onClick={() => handleAddSet(exerciseName)}
+              className="bg-green-700 px-4 py-2 rounded"
+            >
+              Add Set
+            </button>
+            {sets.length > 0 && (
               <button
-                onClick={() => handleRemoveSet(exerciseIndex, setIndex)}
-                className="bg-red-700 px-2 py-1 rounded"
+                onClick={() => handleRemoveSet(exerciseName, sets.length - 1)}
+                className="bg-red-700 px-4 py-2 rounded"
               >
                 Remove Set
               </button>
-            </div>
-          ))}
-          <button
-            onClick={() => handleAddSet(exerciseIndex)}
-            className="bg-green-700 px-4 py-2 rounded"
-          >
-            Add Set
-          </button>
+            )}
+          </div>
         </div>
       ))}
-      {/* <div className="mt-4">
-        <label className="block mb-2">Add Custom Exercise</label>
-        <input
-          type="text"
-          placeholder="Exercise Name"
-          onBlur={(e: ChangeEvent<HTMLInputElement>) => addCustomExercise(e.target.value)}
-          className="p-2 rounded"
-        />
-      </div> */}
       <div className="mt-4">
         <label className="block mb-2">Notes</label>
         <textarea
