@@ -1,7 +1,9 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import Dropdown from 'react-dropdown';
+import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import { fetchExercises, Exercise } from '../utils/exerciseService';
+import '../styles/DotDropdownMenu.css'
 
 interface Set {
   weight: number;
@@ -22,6 +24,7 @@ const CurrentWorkout: React.FC = () => {
     const savedNotes = localStorage.getItem('workoutNotes');
     return savedNotes ? savedNotes : '';
   });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     const loadExercises = async () => {
@@ -107,7 +110,6 @@ const CurrentWorkout: React.FC = () => {
     for (let i = 1; i <= 10; i++) {
       options.push(i);
     }
-    options.push(7.5);
     for (let i = 10.25; i <= 300; i += 0.25) {
       options.push(parseFloat(i.toFixed(2)));
     }
@@ -124,6 +126,8 @@ const CurrentWorkout: React.FC = () => {
     { value: 'removeExercise', label: 'Remove Exercise' },
   ];
 
+  const [dropdownValue, setDropdownValue] = useState<string | undefined>(undefined);
+
   const handleSelect = (exerciseName: string, option: any) => {
     switch (option.value) {
       case 'addSet':
@@ -138,112 +142,214 @@ const CurrentWorkout: React.FC = () => {
       default:
         break;
     }
+    setDropdownValue(undefined);
+  };
+
+  const CustomControl = () => {
+    return (
+      <div className="w-[40px] justify-center flex items-center cursor-pointer">
+        <i className="fas fa-ellipsis-v"></i>
+      </div>
+    );
   };
 
   const allExercises = [...exercises, ...customExercises];
+  const exerciseOptions = allExercises.map(exercise => ({ value: exercise.name, label: exercise.name }));
 
   return (
-    <div className="min-h-screen flex flex-col text-white bg-gradient-to-r from-indigo-950 to-slate-950 p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl">WEEK 1 DAY 2 Tuesday</h2>
-        <button className="bg-gray-700 px-4 py-2 rounded">Minimize Calendar</button>
-      </div>
-      <div className="mb-4">
-        <label className="block mb-2">Add Exercise</label>
-        <select onChange={(e: ChangeEvent<HTMLSelectElement>) => addWorkoutExercise(e.target.value)} className="p-2 rounded">
-          <option value="">Select an exercise</option>
-          {allExercises.map((exercise, index) => (
-            <option className="text-black" key={index} value={exercise.name}>
-              {exercise.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => (
-        <div key={exerciseIndex} className="mb-6 p-4 bg-gray-800 rounded">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg mb-2">{exerciseName}</h3>
-            <Dropdown
-              options={options}
-              onChange={(option) => handleSelect(exerciseName, option)}
-              placeholder="Options"
-              className="dropdown"
-              controlClassName="dropdown-control"
-              menuClassName="dropdown-menu"
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      {isSidebarCollapsed ? null : (
+        <aside className="w-64 bg-gray-900 text-white flex flex-col">
+          <div className="px-4 py-2 bg-gray-800 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-right">RP</h1>
+              <span className="text-sm">Hypertrophy Beta</span>
+            </div>
+          </div>
+          <nav className="flex-1 px-2 py-4">
+            <a href="#" className="block px-2 py-2 text-sm font-semibold bg-gray-700 rounded">Current workout</a>
+            <a href="#" className="block px-2 py-2 text-sm">Mesocycles</a>
+            <a href="#" className="block px-2 py-2 text-sm">Templates</a>
+            <a href="#" className="block px-2 py-2 text-sm">Custom exercises</a>
+            <a href="#" className="block px-2 py-2 text-sm">Plan a new mesocycle</a>
+          </nav>
+          <div className="px-2 py-4 bg-gray-800">
+            <a href="#" className="block px-2 py-2 text-sm">Light Theme</a>
+            <a href="#" className="block px-2 py-2 text-sm">Profile</a>
+            <a href="#" className="block px-2 py-2 text-sm">Subscription</a>
+            <a href="#" className="block px-2 py-2 text-sm">Sign out</a>
+            <a href="#" className="block px-2 py-2 text-sm">Help</a>
+            <a href="#" className="block px-2 py-2 text-sm">Leave a review</a>
+          </div>
+        </aside>
+      )}
+
+      <main className="flex-1 p-6 bg-gray-100">
+        <div className="max-w-3xl mx-auto">
+          <header className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-black">WEEK 1 DAY 1 Monday</h2>
+            <button className="bg-violet-950 text-white px-4 py-2 rounded">Minimize Calendar</button>
+            {/* fa fa-calendar */}
+          </header>
+
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="fixed top-4 left-4 bg-gray-700 text-white px-2 py-1 rounded z-50"
+          >
+            {isSidebarCollapsed ? (
+              <i className="fas fa-chevron-right"></i>
+            ) : (
+              <i className="fas fa-chevron-left"></i>
+            )}
+          </button>
+
+
+          <div className="mb-4">
+            <Select
+              options={exerciseOptions}
+              onChange={(option: SingleValue<{ value: string; label: string }>) => {
+                if (option) {
+                  addWorkoutExercise(option.value);
+                }
+              }}
+              placeholder="Add Exercise"
+              className="text-black"
+              classNamePrefix="react-select"
             />
           </div>
-          {sets && sets.length > 0 ? (
-            <>
-              <div className="grid grid-cols-4 gap-4 items-center">
-                <div className="uppercase">Set</div>
-                <div className="uppercase">Weight (kg)</div>
-                <div className="uppercase">Reps</div>
-                <div></div>
+
+          {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => (
+            <div key={exerciseIndex} className="mb-6 p-4 bg-white rounded shadow">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold text-black">{exerciseName}</h3>
+                <Dropdown
+                  options={options}
+                  onChange={(option) => handleSelect(exerciseName, option)}
+                  placeholder=""
+                  className="dropdown"
+                  controlClassName="dropdown-control custom-control"
+                  menuClassName="dropdown-menu"
+                  arrowClosed={<CustomControl />}
+                  arrowOpen={<CustomControl />}
+                />
               </div>
-              <div className="flex flex-col space-y-2">
-                {sets.map((set, setIndex) => (
-                  <div key={setIndex} className="grid grid-cols-4 gap-4 items-center">
-                    <div className="flex items-center justify-center">{setIndex + 1}</div>
-                    <div className="flex-1">
-                      <input
-                        type="number"
-                        placeholder="ENTER"
-                        value={set.weight || ''}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseName, setIndex, 'weight', Number(e.target.value))}
-                        className="w-full p-2 rounded text-black"
-                        list={`weight-options-${exerciseIndex}-${setIndex}`}
-                      />
-                      <datalist id={`weight-options-${exerciseIndex}-${setIndex}`}>
-                        {generateWeightOptions().map(option => (
-                          <option key={option} value={option} />
-                        ))}
-                      </datalist>
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="number"
-                        placeholder="ENTER"
-                        value={set.reps || ''}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange(exerciseName, setIndex, 'reps', Number(e.target.value))}
-                        className="w-full p-2 rounded text-black"
-                        list={`reps-options-${exerciseIndex}-${setIndex}`}
-                      />
-                      <datalist id={`reps-options-${exerciseIndex}-${setIndex}`}>
-                        {generateRepsOptions(30).map(option => (
-                          <option key={option} value={option} />
-                        ))}
-                      </datalist>
-                    </div>
-                    <div className="flex items-center justify-center">
-                      {set.logged ? (
-                        <span>✔️</span>
-                      ) : (
-                        <button
-                          onClick={() => handleLogSet(exerciseName, setIndex)}
-                          className="bg-blue-700 px-4 py-2 rounded"
-                        >
-                          Log Set
-                        </button>
-                      )}
-                    </div>
+
+              {sets && sets.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-4 gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
+                    <div>Set</div>
+                    <div>Weight (kg)</div>
+                    <div>Reps</div>
+                    <div></div>
                   </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p>No sets available.</p>
-          )}
+                  <div className="flex flex-col space-y-2">
+                    {sets.map((set, setIndex) => (
+                      <div key={setIndex} className="grid grid-cols-4 gap-4 items-center border-t py-2">
+                        <div className="flex items-center justify-center text-black">{setIndex + 1}</div>
+                        <div className="flex-1">
+                          <Select
+                            options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
+                            onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'weight', Number(option?.value))}
+                            placeholder="ENTER"
+                            className="w-full text-black"
+                            classNamePrefix="react-select"
+                            value={{ value: set.weight.toString(), label: set.weight.toString() }}
+                            styles={{
+                              control: (provided, state) => ({
+                                ...provided,
+                                height: '40px',
+                                minHeight: '40px',
+                                justifyContent: 'center',
+                                borderColor: state.isFocused ? 'purple' : provided.borderColor,
+                                '&:hover': {
+                                  borderColor: '#4A148C',
+                                },
+                              }),
+                              indicatorSeparator: (provided) => ({
+                                ...provided,
+                                display: 'none'
+                              }),
+                              dropdownIndicator: (provided) => ({
+                                ...provided,
+                                color: '#718096'
+                              }),
+                              singleValue: (provided) => ({
+                                ...provided,
+                                display: 'flex',
+                                justifyContent: 'right'
+                              })
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Select
+                            options={generateRepsOptions(50).map(option => ({ value: option.toString(), label: option.toString() }))}
+                            onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'reps', Number(option?.value))}
+                            placeholder="ENTER"
+                            className="w-full text-black"
+                            classNamePrefix="react-select text-black"
+                            value={{ value: set.reps.toString(), label: set.reps.toString() }}
+                            styles={{
+                              control: (provided, state) => ({
+                                ...provided,
+                                height: '40px',
+                                minHeight: '40px',
+                                justifyContent: 'center',
+                                borderColor: state.isFocused ? 'purple' : provided.borderColor,
+                                '&:hover': {
+                                  borderColor: '#4A148C',
+                                },
+                              }),
+                              indicatorSeparator: (provided) => ({
+                                ...provided,
+                                display: 'none'
+                              }),
+                              dropdownIndicator: (provided) => ({
+                                ...provided,
+                                color: '#718096'
+                              }),
+                              singleValue: (provided) => ({
+                                ...provided,
+                                display: 'flex',
+                                justifyContent: 'right'
+                              })
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-center">
+                          {set.logged ? (
+                            <span className="text-green-500">✔️</span>
+                          ) : (
+                            <button
+                              onClick={() => handleLogSet(exerciseName, setIndex)}
+                              className="bg-violet-900 text-white px-4 py-2 rounded uppercase"
+                            >
+                              Log Set
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500">No sets available.</p>
+              )}
+            </div>
+          ))}
+
+          <div className="mt-4">
+            <label className="block mb-2 text-lg text-black">Notes</label>
+            <textarea
+              className="w-full p-2 border rounded text-gray-700"
+              rows={4}
+              value={notes}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
+            ></textarea>
+          </div>
         </div>
-      ))}
-      <div className="mt-4">
-        <label className="block mb-2">Notes</label>
-        <textarea
-          className="w-full p-2 rounded text-black"
-          rows={4}
-          value={notes}
-          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
-        ></textarea>
-      </div>
+      </main>
     </div>
   );
 };

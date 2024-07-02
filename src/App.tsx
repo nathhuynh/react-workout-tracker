@@ -19,7 +19,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <Navbar />
+      {/* <Navbar /> */}
       <main className="min-h-screen flex flex-col text-white text-sm sm:text-base bg-gradient-to-r from-indigo-950 to-slate-950">
         <Routes>
           <Route path="/" element={<Hero />} />

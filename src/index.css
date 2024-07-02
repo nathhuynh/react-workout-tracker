@@ -15,7 +15,7 @@ span {
     box-shadow: 4px 4px 0 0 #a78bfa;
 }
 
-.buttonShadow:hover{
+.buttonShadow:hover {
     box-shadow: 7px 7px 0 0 #a78bfa;
     transform: translate(-4px, -4px);
 }

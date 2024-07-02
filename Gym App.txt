@@ -16,11 +16,13 @@ Section for each exercise
 => Autofill the rest of the sets after the first set ✓
 - Notes section at the bottom of each session ✓
 => "Tick Done" button for each Set ✓
+=> Move Remove Exercise, Add/Remove Set, Add/Remove Dropset, etc to dropdown list (more clean) ✓
+=> Left-side vertical Navigation bar ✓
 
 TODO
+=> Integrate a React Component Library (Shadcn) ?
 => Add/remove dropsets -+
 => Add Custom Exercise and have it save to JSON exercise list
-=> Move Remove Exercise, Add/Remove Set, Add/Remove Dropset, etc to dropdown list (more clean)
 => Functional minimizable calendar
 
 2) RP Hypertrophy App Style Mesocycle Creation
