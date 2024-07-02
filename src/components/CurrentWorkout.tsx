@@ -1,4 +1,6 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
+import Dropdown from 'react-dropdown';
+import 'react-dropdown/style.css';
 import { fetchExercises, Exercise } from '../utils/exerciseService';
 
 interface Set {
@@ -116,6 +118,28 @@ const CurrentWorkout: React.FC = () => {
     return Array.from({ length: max }, (_, i) => i + 1);
   };
 
+  const options = [
+    { value: 'addSet', label: 'Add Set' },
+    { value: 'removeSet', label: 'Remove Set' },
+    { value: 'removeExercise', label: 'Remove Exercise' },
+  ];
+
+  const handleSelect = (exerciseName: string, option: any) => {
+    switch (option.value) {
+      case 'addSet':
+        handleAddSet(exerciseName);
+        break;
+      case 'removeSet':
+        handleRemoveSet(exerciseName, workoutExercises.get(exerciseName)!.length - 1);
+        break;
+      case 'removeExercise':
+        handleRemoveExercise(exerciseName);
+        break;
+      default:
+        break;
+    }
+  };
+
   const allExercises = [...exercises, ...customExercises];
 
   return (
@@ -139,12 +163,14 @@ const CurrentWorkout: React.FC = () => {
         <div key={exerciseIndex} className="mb-6 p-4 bg-gray-800 rounded">
           <div className="flex justify-between items-center">
             <h3 className="text-lg mb-2">{exerciseName}</h3>
-            <button
-              onClick={() => handleRemoveExercise(exerciseName)}
-              className="bg-red-700 px-2 py-1 rounded"
-            >
-              Remove Exercise
-            </button>
+            <Dropdown
+              options={options}
+              onChange={(option) => handleSelect(exerciseName, option)}
+              placeholder="Options"
+              className="dropdown"
+              controlClassName="dropdown-control"
+              menuClassName="dropdown-menu"
+            />
           </div>
           {sets && sets.length > 0 ? (
             <>
@@ -207,22 +233,6 @@ const CurrentWorkout: React.FC = () => {
           ) : (
             <p>No sets available.</p>
           )}
-          <div className="flex space-x-2 mt-2">
-            <button
-              onClick={() => handleAddSet(exerciseName)}
-              className="bg-green-700 px-4 py-2 rounded"
-            >
-              Add Set
-            </button>
-            {sets.length > 0 && (
-              <button
-                onClick={() => handleRemoveSet(exerciseName, sets.length - 1)}
-                className="bg-red-700 px-4 py-2 rounded"
-              >
-                Remove Set
-              </button>
-            )}
-          </div>
         </div>
       ))}
       <div className="mt-4">
