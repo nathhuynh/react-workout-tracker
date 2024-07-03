@@ -17,22 +17,23 @@ Section for each exercise
 - Notes section at the bottom of each session ✓
 => "Tick Done" button for each Set ✓
 => Move Remove Exercise, Add/Remove Set, Add/Remove Dropset, etc to dropdown list (more clean) ✓
-=> Left-side vertical Navigation bar ✓
+=> Left-side vertical side bar ✓
 
 TODO
-=> Integrate a React Component Library (Shadcn) ?
+=> Drag exercises to change ordering
 => Add/remove dropsets -+
 => Add Custom Exercise and have it save to JSON exercise list
 => Functional minimizable calendar
+=> Nice side bar "tailwind collapsible sidebar react"
 
-2) RP Hypertrophy App Style Mesocycle Creation
+2) Create custom exercise page
+
+3) RP Hypertrophy App Style Mesocycle Creation
 - Pick weekly frequency
 - Plan weekly schedule on one page (Adjustable days, sets per muscle group calcs) 
 - Autofill a Mesocycle (4/5/6 week duration), (2 RIR, 1 RIR, 0 RIR, Deload for a 4 week mesocycle)
 - Automatic deload at the end of the Mesocycle
 - Recommended Progression (Add a set / Increment weight)
-
-3) Create custom exercise page
 
 4) Later features:
 - Progression Charts for each exercise

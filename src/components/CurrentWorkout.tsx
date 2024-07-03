@@ -158,52 +158,13 @@ const CurrentWorkout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar */}
-      {isSidebarCollapsed ? null : (
-        <aside className="w-64 bg-gray-900 text-white flex flex-col">
-          <div className="px-4 py-2 bg-gray-800 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-right">RP</h1>
-              <span className="text-sm">Hypertrophy Beta</span>
-            </div>
-          </div>
-          <nav className="flex-1 px-2 py-4">
-            <a href="#" className="block px-2 py-2 text-sm font-semibold bg-gray-700 rounded">Current workout</a>
-            <a href="#" className="block px-2 py-2 text-sm">Mesocycles</a>
-            <a href="#" className="block px-2 py-2 text-sm">Templates</a>
-            <a href="#" className="block px-2 py-2 text-sm">Custom exercises</a>
-            <a href="#" className="block px-2 py-2 text-sm">Plan a new mesocycle</a>
-          </nav>
-          <div className="px-2 py-4 bg-gray-800">
-            <a href="#" className="block px-2 py-2 text-sm">Light Theme</a>
-            <a href="#" className="block px-2 py-2 text-sm">Profile</a>
-            <a href="#" className="block px-2 py-2 text-sm">Subscription</a>
-            <a href="#" className="block px-2 py-2 text-sm">Sign out</a>
-            <a href="#" className="block px-2 py-2 text-sm">Help</a>
-            <a href="#" className="block px-2 py-2 text-sm">Leave a review</a>
-          </div>
-        </aside>
-      )}
-
       <main className="flex-1 p-6 bg-gray-100">
         <div className="max-w-3xl mx-auto">
           <header className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold text-black">WEEK 1 DAY 1 Monday</h2>
-            <button className="bg-violet-950 text-white px-4 py-2 rounded">Minimize Calendar</button>
+            <button className="bg-violet-950 text-white px-4 py-2 rounded">Minimise Calendar</button>
             {/* fa fa-calendar */}
           </header>
-
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="fixed top-4 left-4 bg-gray-700 text-white px-2 py-1 rounded z-50"
-          >
-            {isSidebarCollapsed ? (
-              <i className="fas fa-chevron-right"></i>
-            ) : (
-              <i className="fas fa-chevron-left"></i>
-            )}
-          </button>
-
 
           <div className="mb-4">
             <Select
