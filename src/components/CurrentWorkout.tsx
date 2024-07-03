@@ -30,6 +30,11 @@ const CurrentWorkout: React.FC = () => {
     const loadExercises = async () => {
       const data: Exercise[] = await fetchExercises();
       setExercises(data);
+
+      const savedCustomExercises = localStorage.getItem('customExercises');
+      if (savedCustomExercises) {
+        setCustomExercises(JSON.parse(savedCustomExercises));
+      }
     };
     loadExercises();
   }, []);
@@ -153,7 +158,8 @@ const CurrentWorkout: React.FC = () => {
     );
   };
 
-  const allExercises = [...exercises, ...customExercises];
+  // const allExercises = [...exercises, ...customExercises];
+  const allExercises = [...exercises, ...customExercises].sort((a, b) => a.name.localeCompare(b.name)); // slowdown?
   const exerciseOptions = allExercises.map(exercise => ({ value: exercise.name, label: exercise.name }));
 
   return (
@@ -222,7 +228,7 @@ const CurrentWorkout: React.FC = () => {
                                 height: '40px',
                                 minHeight: '40px',
                                 justifyContent: 'center',
-                                borderColor: state.isFocused ? 'purple' : provided.borderColor,
+                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
                                 '&:hover': {
                                   borderColor: '#4A148C',
                                 },
@@ -257,7 +263,7 @@ const CurrentWorkout: React.FC = () => {
                                 height: '40px',
                                 minHeight: '40px',
                                 justifyContent: 'center',
-                                borderColor: state.isFocused ? 'purple' : provided.borderColor,
+                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
                                 '&:hover': {
                                   borderColor: '#4A148C',
                                 },

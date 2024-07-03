@@ -26,7 +26,14 @@ TODO
 => Functional minimizable calendar
 => Nice side bar "tailwind collapsible sidebar react"
 
-2) Create custom exercise page
+2) Create custom exercise page ✓
+
+TODO:
+=> Add Exercise Button fixed at the top right of page
+=> Add Exercise pops the section in front of everything else (Foreground)
+=> Same styling as CurrentWorkout (Width, Separating Lines, 3 dots dropdown)
+=> Each custom exercise needs Name, Equipment, Muscles, Category displayed
+=> Manage Exercise pops the section in front of everything else
 
 3) RP Hypertrophy App Style Mesocycle Creation
 - Pick weekly frequency

@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Hero from './components/Hero';
 import Workout from './components/CurrentWorkout';
 // import Navbar from './components/Navbar';
-import AddExercise from './components/AddExercise';
 import Layout from './components/Layout';
+import AddCustomExercise from './components/AddCustomExercise';
 
 interface Exercise {
   name: string;
@@ -26,7 +26,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Hero />} />
             <Route path="/workout" element={<Workout />} />
-            <Route path="/addexercise" element={<AddExercise addExercise={addExercise} />} />
+            <Route path="/addcustomexercise" element={<AddCustomExercise />} />
           </Routes>
         </main>
       </Layout>
