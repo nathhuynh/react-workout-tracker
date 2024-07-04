@@ -1,9 +1,11 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import Dropdown from 'react-dropdown';
 import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import { fetchExercises, Exercise } from '../utils/exerciseService';
-import '../styles/DotDropdownMenu.css'
+import '../styles/DotDropdownMenu.css';
 
 interface Set {
   weight: number;
@@ -16,15 +18,17 @@ type ExerciseMap = Map<string, Set[]>;
 const CurrentWorkout: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [workoutExercises, setWorkoutExercises] = useState<ExerciseMap>(() => {
-    const savedExercises = localStorage.getItem('workoutExercises');
+    const savedExercises = localStorage.getItem(`workoutExercises_${new Date().toISOString().split('T')[0]}`);
     return savedExercises ? new Map(JSON.parse(savedExercises)) : new Map();
   });
   const [notes, setNotes] = useState(() => {
-    const savedNotes = localStorage.getItem('workoutNotes');
+    const savedNotes = localStorage.getItem(`workoutNotes_${new Date().toISOString().split('T')[0]}`);
     return savedNotes ? savedNotes : '';
   });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
   useEffect(() => {
     const loadExercises = async () => {
@@ -40,12 +44,12 @@ const CurrentWorkout: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('workoutExercises', JSON.stringify(Array.from(workoutExercises.entries())));
-  }, [workoutExercises]);
+    localStorage.setItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(Array.from(workoutExercises.entries())));
+  }, [workoutExercises, selectedDate]);
 
   useEffect(() => {
-    localStorage.setItem('workoutNotes', notes);
-  }, [notes]);
+    localStorage.setItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`, notes);
+  }, [notes, selectedDate]);
 
   const handleAddSet = (exerciseName: string) => {
     setWorkoutExercises(prev => {
@@ -158,19 +162,41 @@ const CurrentWorkout: React.FC = () => {
     );
   };
 
-  // const allExercises = [...exercises, ...customExercises];
-  const allExercises = [...exercises, ...customExercises].sort((a, b) => a.name.localeCompare(b.name)); // slowdown?
+  const allExercises = [...exercises, ...customExercises].sort((a, b) => a.name.localeCompare(b.name));
   const exerciseOptions = allExercises.map(exercise => ({ value: exercise.name, label: exercise.name }));
+
+  const handleDateChange = (value: Date | Date[] | null) => {
+    if (!value || Array.isArray(value)) return;
+    setSelectedDate(value);
+    const savedExercises = localStorage.getItem(`workoutExercises_${value.toISOString().split('T')[0]}`);
+    setWorkoutExercises(savedExercises ? new Map(JSON.parse(savedExercises)) : new Map());
+    const savedNotes = localStorage.getItem(`workoutNotes_${value.toISOString().split('T')[0]}`);
+    setNotes(savedNotes || '');
+    setIsCalendarVisible(false);
+  };
 
   return (
     <div className="min-h-screen flex">
       <main className="flex-1 p-6 bg-gray-100">
         <div className="max-w-3xl mx-auto">
           <header className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-black">WEEK 1 DAY 1 Monday</h2>
-            <button className="bg-violet-950 text-white px-4 py-2 rounded">Minimise Calendar</button>
-            {/* fa fa-calendar */}
+            <h2 className="text-2xl font-semibold text-black">{selectedDate.toDateString()}</h2>
+            <button
+              className="bg-violet-950 text-white px-4 py-2 rounded"
+              onClick={() => setIsCalendarVisible(!isCalendarVisible)}
+            >
+              {isCalendarVisible ? 'Hide Calendar' : 'Show Calendar'}
+            </button>
           </header>
+
+          {isCalendarVisible && (
+            <div className="mb-4 flex justify-center">
+              <Calendar
+                onChange={handleDateChange}
+                value={selectedDate}
+              />
+            </div>
+          )}
 
           <div className="mb-4">
             <Select
