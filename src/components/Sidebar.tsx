@@ -22,7 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
             <a href="#" className="block px-2 py-2 text-sm">Mesocycles</a>
             <a href="#" className="block px-2 py-2 text-sm">Templates</a>
             <a href="/addcustomexercise" className="block px-2 py-2 text-sm">Custom exercises</a>
-            <a href="#" className="block px-2 py-2 text-sm">Plan a new mesocycle</a>
+            <a href="/new-mesocycle" className="block px-2 py-2 text-sm">Plan a new mesocycle</a>
           </nav>
           <div className="px-2 py-4 bg-gray-800">
             <a href="#" className="block px-2 py-2 text-sm">Light Theme</a>

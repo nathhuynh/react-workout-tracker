@@ -5,6 +5,7 @@ import Workout from './components/CurrentWorkout';
 // import Navbar from './components/Navbar';
 import Layout from './components/Layout';
 import AddCustomExercise from './components/AddCustomExercise';
+import NewMesocycle from './components/NewMesocycle';
 
 interface Exercise {
   name: string;
@@ -27,6 +28,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Hero />} />
             <Route path="/workout" element={<Workout />} />
             <Route path="/addcustomexercise" element={<AddCustomExercise />} />
+            <Route path="/new-mesocycle" element={<NewMesocycle />} />
           </Routes>
         </main>
       </Layout>

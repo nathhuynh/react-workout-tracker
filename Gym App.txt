@@ -42,6 +42,12 @@ TODO:
 - Recommended Progression (Add a set / Increment weight)
 => Autofill 'Current Workout' pages for corresponding dates
 
+TODO:
+=> Fix exercise loading for react-select lists
+=> Formatting
+=> Drag to delete exercise box
+=> Create Mesocycle button saves to list of mesocycles
+
 4) Later features:
 - Progression Charts for each exercise
 - Rest timer (Needs to be on Current Workout page, you don't want to have to switch tabs)
