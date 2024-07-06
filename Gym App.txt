@@ -44,6 +44,7 @@ TODO:
 
 TODO:
 => Fix exercise loading for react-select lists
+=> Move Templates to a separate JSON / file
 => Formatting
 => Drag to delete exercise box
 => Create Mesocycle button saves to list of mesocycles

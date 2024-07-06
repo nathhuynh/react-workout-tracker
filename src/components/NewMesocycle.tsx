@@ -3,7 +3,8 @@ import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaPen } from 'react-icons/fa';
+import { useExerciseOptions } from '../utils/useExerciseOptions';
 
 interface Exercise {
     name: string;
@@ -25,95 +26,35 @@ const dayOptions = [
     { label: 'Sunday', value: 'Sunday' },
 ];
 
-const templates = [
-    {
-        label: 'Push/Pull/Legs',
-        value: 'push-pull-legs',
-        days: [
-            {
-                name: 'Monday',
-                exercises: [
-                    { muscleGroup: 'Chest', exercise: null },
-                    { muscleGroup: 'Chest', exercise: null },
-                    { muscleGroup: 'Chest', exercise: null },
-                    { muscleGroup: 'Triceps', exercise: null },
-                    { muscleGroup: 'Triceps', exercise: null },
-                    { muscleGroup: 'Shoulders', exercise: null },
-                ],
-            },
-            {
-                name: 'Tuesday',
-                exercises: [
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Biceps', exercise: null },
-                    { muscleGroup: 'Biceps', exercise: null },
-                ],
-            },
-            {
-                name: 'Wednesday',
-                exercises: [
-                    { muscleGroup: 'Hamstrings', exercise: null },
-                    { muscleGroup: 'Quads', exercise: null },
-                    { muscleGroup: 'Quads', exercise: null },
-                    { muscleGroup: 'Quads', exercise: null },
-                    { muscleGroup: 'Calves', exercise: null },
-                ],
-            },
-            {
-                name: 'Thursday',
-                exercises: [
-                    { muscleGroup: 'Chest', exercise: null },
-                    { muscleGroup: 'Chest', exercise: null },
-                    { muscleGroup: 'Chest', exercise: null },
-                    { muscleGroup: 'Triceps', exercise: null },
-                    { muscleGroup: 'Triceps', exercise: null },
-                    { muscleGroup: 'Shoulders', exercise: null },
-                ],
-            },
-            {
-                name: 'Friday',
-                exercises: [
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Back', exercise: null },
-                    { muscleGroup: 'Biceps', exercise: null },
-                    { muscleGroup: 'Biceps', exercise: null },
-                ],
-            },
-            {
-                name: 'Saturday',
-                exercises: [
-                    { muscleGroup: 'Hamstrings', exercise: null },
-                    { muscleGroup: 'Quads', exercise: null },
-                    { muscleGroup: 'Quads', exercise: null },
-                    { muscleGroup: 'Quads', exercise: null },
-                    { muscleGroup: 'Calves', exercise: null },
-                ],
-            },
-        ],
-    },
-];
-
 const NewMesocycle: React.FC = () => {
+    const { exercisesByMuscle } = useExerciseOptions();
+    const [templates, setTemplates] = useState<{ label: string, value: string, days: Day[] }[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<{ label: string, value: string, days: Day[] } | null>(null);
     const [days, setDays] = useState<Day[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]);
+    const [showModal, setShowModal] = useState(false);
+    const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
+    const [mesocycleName, setMesocycleName] = useState('New Mesocycle');
+    const [isEditingName, setIsEditingName] = useState(false);
 
     useEffect(() => {
-        // Fetch exercises from the API or local storage
-        const fetchExercises = async () => {
-            // Assuming fetchExercises() returns an array of exercises
-            const data = await fetch('/api/exercises').then(res => res.json());
-            setExercises(data);
+        const fetchTemplates = async () => {
+            try {
+                const response = await fetch('data/mesocycle-templates.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Fetched templates:', data);
+                    setTemplates(data);
+                } else {
+                    console.error('Failed to fetch templates.json', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error fetching templates:', error);
+            }
         };
+        fetchTemplates();
+    }, []);
 
-        fetchExercises();
-
-        // Load template and days from localStorage
+    useEffect(() => {
         const savedTemplate = localStorage.getItem('selectedTemplate');
         const savedDays = localStorage.getItem('savedDays');
         if (savedTemplate) {
@@ -125,7 +66,6 @@ const NewMesocycle: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        // Save days and selected template to localStorage whenever days or template state changes
         if (selectedTemplate) {
             localStorage.setItem('savedDays', JSON.stringify(days));
             localStorage.setItem('selectedTemplate', JSON.stringify(selectedTemplate));
@@ -135,7 +75,7 @@ const NewMesocycle: React.FC = () => {
     const handleTemplateChange = (option: SingleValue<{ label: string, value: string, days: Day[] }>) => {
         if (option) {
             setSelectedTemplate(option);
-            setDays(option.days); // Initialize days from template
+            setDays(option.days);
         }
     };
 
@@ -164,16 +104,8 @@ const NewMesocycle: React.FC = () => {
     };
 
     const handleAddExercise = (dayIndex: number) => {
-        const newDays = days.map((day, i) => {
-            if (i === dayIndex) {
-                return {
-                    ...day,
-                    exercises: [...day.exercises, { muscleGroup: '', exercise: null }]
-                };
-            }
-            return day;
-        });
-        setDays(newDays);
+        setCurrentDayIndex(dayIndex);
+        setShowModal(true);
     };
 
     const handleRemoveExercise = (dayIndex: number, exerciseIndex: number) => {
@@ -214,12 +146,10 @@ const NewMesocycle: React.FC = () => {
     const onDragEnd = (result: any) => {
         const { source, destination } = result;
 
-        // If dropped outside the list
         if (!destination) {
             return;
         }
 
-        // If dropped in the same place
         if (source.droppableId === destination.droppableId && source.index === destination.index) {
             return;
         }
@@ -232,14 +162,11 @@ const NewMesocycle: React.FC = () => {
 
         const newDays = Array.from(days);
         if (destination.droppableId === 'remove-exercise') {
-            // Removing the exercise
             newDays[sourceDayIndex].exercises = sourceExercises;
         } else if (sourceDayIndex === destinationDayIndex) {
-            // Moving within the same day
             sourceExercises.splice(destination.index, 0, movedExercise);
             newDays[sourceDayIndex].exercises = sourceExercises;
         } else {
-            // Moving to a different day
             const destinationExercises = Array.from(days[destinationDayIndex].exercises);
             destinationExercises.splice(destination.index, 0, movedExercise);
             newDays[sourceDayIndex].exercises = sourceExercises;
@@ -253,16 +180,86 @@ const NewMesocycle: React.FC = () => {
         return dayOptions.filter(dayOption => !days.some(day => day.name === dayOption.value && day.name !== currentDay));
     };
 
+    const handleMuscleGroupSelect = (option: SingleValue<{ value: string, label: string }>) => {
+        if (currentDayIndex !== null && option) {
+            const newDays = days.map((day, i) => {
+                if (i === currentDayIndex) {
+                    return {
+                        ...day,
+                        exercises: [...day.exercises, { muscleGroup: option.value, exercise: null }]
+                    };
+                }
+                return day;
+            });
+            setDays(newDays);
+            setShowModal(false);
+        }
+    };
+
+    const sortedMuscleGroups = Object.keys(exercisesByMuscle).sort().map(muscle => ({ value: muscle, label: muscle }));
+
+    const handleNameEdit = () => {
+        setIsEditingName(true);
+    };
+
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setMesocycleName(e.target.value);
+    };
+
+    const handleNameBlur = () => {
+        setIsEditingName(false);
+        localStorage.setItem('mesocycleName', mesocycleName);
+    };
+
+    useEffect(() => {
+        const savedName = localStorage.getItem('mesocycleName');
+        if (savedName) {
+            setMesocycleName(savedName);
+        }
+    }, []);
+
     return (
         <div className="min-h-screen flex flex-col p-6 bg-gray-100">
             <header className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold text-black">New Mesocycle</h2>
-                <button
-                    className="bg-violet-950 text-white px-4 py-2 rounded"
-                    onClick={handleCreateMesocycle}
-                >
-                    Create Mesocycle
-                </button>
+                <div className="flex items-center">
+                    {isEditingName ? (
+                        <input
+                            type="text"
+                            value={mesocycleName}
+                            onChange={handleNameChange}
+                            onBlur={handleNameBlur}
+                            autoFocus
+                            className="text-2xl font-semibold text-black"
+                        />
+                    ) : (
+                        <div className="flex items-center">
+                            <h2
+                                className="text-2xl font-semibold text-black cursor-pointer"
+                                onClick={handleNameEdit}
+                            >
+                                {mesocycleName}
+                            </h2>
+                            <FaPen
+                                className="ml-2 text-gray-600 cursor-pointer"
+                                onClick={handleNameEdit}
+                            />
+                        </div>
+                    )}
+                </div>
+                <div className="grid gap-1">
+                    <button
+                        className="bg-violet-950 text-white px-4 py-2 rounded uppercase"
+                        onClick={handleCreateMesocycle}
+                    >
+                        Create Mesocycle
+                    </button>
+                    <button
+                        className="bg-violet-950 text-white px-4 py-2 rounded uppercase"
+                        onClick={handleAddDay}
+                    >
+                        + Add Day
+                    </button>
+                </div>
             </header>
 
             <div className="mb-4">
@@ -316,10 +313,9 @@ const NewMesocycle: React.FC = () => {
                                                 >
                                                     <div className="flex justify-between items-center">
                                                         <span className="text-sm font-bold text-red-500">{exercise.muscleGroup.toUpperCase()}</span>
-                                                        {/* Remove the trash icon from here */}
                                                     </div>
                                                     <Select
-                                                        options={exercises.filter(ex => ex.muscleGroup.toLowerCase() === exercise.muscleGroup.toLowerCase()).map(ex => ({ value: ex.name, label: ex.name }))}
+                                                        options={exercisesByMuscle[exercise.muscleGroup]?.map(ex => ({ value: ex.name, label: ex.name })) || []}
                                                         onChange={(option) => handleExerciseChange(dayIndex, exerciseIndex, option)}
                                                         placeholder="Choose an exercise"
                                                         className="text-black mt-2"
@@ -337,19 +333,6 @@ const NewMesocycle: React.FC = () => {
                                     >
                                         Add Exercise
                                     </button>
-                                    {/* Add the Remove Exercise box here */}
-                                    <Droppable droppableId="remove-exercise">
-                                        {(provided) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.droppableProps}
-                                                className="bg-red-500 text-white px-2 py-1 rounded mt-4 text-center"
-                                            >
-                                                Remove Exercise
-                                                {provided.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
                                 </div>
                             )}
                         </Droppable>
@@ -357,12 +340,26 @@ const NewMesocycle: React.FC = () => {
                 </div>
             </DragDropContext>
 
-            <button
-                className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
-                onClick={handleAddDay}
-            >
-                Add Day
-            </button>
+            {showModal && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded shadow-md w-1/3">
+                        <h3 className="text-xl mb-4">Select Muscle Group</h3>
+                        <Select
+                            options={sortedMuscleGroups}
+                            onChange={handleMuscleGroupSelect}
+                            placeholder="Choose a muscle group"
+                            className="text-black"
+                            classNamePrefix="react-select"
+                        />
+                        <button
+                            className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+                            onClick={() => setShowModal(false)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
