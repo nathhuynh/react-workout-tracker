@@ -3,7 +3,7 @@ import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FaTrash, FaPen } from 'react-icons/fa';
+import { FaTrash, FaPen, FaCopy } from 'react-icons/fa';
 import { useExerciseOptions } from '../utils/useExerciseOptions';
 
 interface Exercise {
@@ -33,6 +33,8 @@ const NewMesocycle: React.FC = () => {
     const [days, setDays] = useState<Day[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [currentDayIndex, setCurrentDayIndex] = useState<number | null>(null);
+    const [showCopyModal, setShowCopyModal] = useState<{ show: boolean, sourceDayIndex: number | null }>({ show: false, sourceDayIndex: null });
+    const [copyTargetDayIndex, setCopyTargetDayIndex] = useState<number | null>(null);
     const [mesocycleName, setMesocycleName] = useState('New Mesocycle');
     const [isEditingName, setIsEditingName] = useState(false);
 
@@ -139,8 +141,33 @@ const NewMesocycle: React.FC = () => {
 
     const handleCreateMesocycle = () => {
         const mesocycle = new Map(days.map(day => [day.name, day.exercises]));
-        localStorage.setItem('mesocycle', JSON.stringify(Array.from(mesocycle.entries())));
+        const savedMesocycles = localStorage.getItem('mesocycles');
+        const mesocycles = savedMesocycles ? JSON.parse(savedMesocycles) : [];
+        mesocycles.push({ name: mesocycleName, days: Array.from(mesocycle.entries()) });
+        localStorage.setItem('mesocycles', JSON.stringify(mesocycles));
         alert('Mesocycle created and saved!');
+        console.log("Mesocycle: ", mesocycle)
+    };
+
+    const handleCopyExercises = (sourceDayIndex: number, destinationDayIndex: number) => {
+        const sourceExercises = days[sourceDayIndex].exercises;
+        const newDays = days.map((day, i) => {
+            if (i === destinationDayIndex) {
+                return { ...day, exercises: [...sourceExercises] };
+            }
+            return day;
+        });
+        setDays(newDays);
+        setShowCopyModal({ show: false, sourceDayIndex: null });
+        setCopyTargetDayIndex(null);
+    };
+
+    const handleAddAndCopyExercises = (sourceDayIndex: number, targetDayName: string) => {
+        const sourceExercises = days[sourceDayIndex].exercises;
+        const newDay: Day = { name: targetDayName, exercises: [...sourceExercises] };
+        setDays([...days, newDay]);
+        setShowCopyModal({ show: false, sourceDayIndex: null });
+        setCopyTargetDayIndex(null);
     };
 
     const onDragEnd = (result: any) => {
@@ -217,6 +244,28 @@ const NewMesocycle: React.FC = () => {
             setMesocycleName(savedName);
         }
     }, []);
+
+    const handleOpenCopyModal = (sourceDayIndex: number) => {
+        setShowCopyModal({ show: true, sourceDayIndex });
+    };
+
+    const handleSelectCopyTargetDay = (option: SingleValue<{ label: string, value: string }>) => {
+        const targetDayIndex = days.findIndex(day => day.name === option?.value);
+        if (targetDayIndex !== -1) {
+            setCopyTargetDayIndex(targetDayIndex);
+        } else {
+            setCopyTargetDayIndex(null);
+            if (showCopyModal.sourceDayIndex !== null && option) {
+                handleAddAndCopyExercises(showCopyModal.sourceDayIndex, option.value);
+            }
+        }
+    };
+
+    const handleConfirmCopy = () => {
+        if (showCopyModal.sourceDayIndex !== null && copyTargetDayIndex !== null) {
+            handleCopyExercises(showCopyModal.sourceDayIndex, copyTargetDayIndex);
+        }
+    };
 
     return (
         <div className="min-h-screen flex flex-col p-6 bg-gray-100">
@@ -297,6 +346,12 @@ const NewMesocycle: React.FC = () => {
                                         >
                                             <FaTrash />
                                         </button>
+                                        <button
+                                            className="text-blue-500 text-md"
+                                            onClick={() => handleOpenCopyModal(dayIndex)}
+                                        >
+                                            <FaCopy />
+                                        </button>
                                     </div>
                                     {day.exercises.map((exercise, exerciseIndex) => (
                                         <Draggable
@@ -354,6 +409,33 @@ const NewMesocycle: React.FC = () => {
                         <button
                             className="bg-red-500 text-white px-4 py-2 rounded mt-4"
                             onClick={() => setShowModal(false)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showCopyModal.show && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded shadow-md w-1/3">
+                        <h3 className="text-xl mb-4">Select Target Day</h3>
+                        <Select
+                            options={dayOptions.filter(day => !days.some(d => d.name === day.value))}
+                            onChange={handleSelectCopyTargetDay}
+                            placeholder="Choose a day"
+                            className="text-black"
+                            classNamePrefix="react-select"
+                        />
+                        <button
+                            className="bg-violet-950 text-white px-4 py-2 rounded mt-4 uppercase"
+                            onClick={handleConfirmCopy}
+                        >
+                            Copy
+                        </button>
+                        <button
+                            className="bg-red-500 text-white px-4 py-2 rounded mt-4 ml-2 uppercase"
+                            onClick={() => setShowCopyModal({ show: false, sourceDayIndex: null })}
                         >
                             Cancel
                         </button>

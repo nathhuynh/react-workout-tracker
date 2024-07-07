@@ -24,6 +24,7 @@ TODO
 => Add Custom Exercise and have it save to JSON exercise list
 => Functional minimizable calendar
 => Nice side bar "tailwind collapsible sidebar react"
+=> Supersets (group exercises together visually)
 
 2) Create custom exercise page ✓
 

@@ -33,16 +33,19 @@ export const useExerciseOptions = (): ExerciseOptions => {
   useEffect(() => {
     const fetchOptions = async () => {
       const exercises: Exercise[] = await fetchExercises();
+      const customExercises = localStorage.getItem('customExercises');
+      const parsedCustomExercises = customExercises ? JSON.parse(customExercises) : [];
+      const allExercises = [...exercises, ...parsedCustomExercises];
 
       const equipmentTypes = Array.from(
-        new Set(exercises.map(ex => capitalize(ex.equipment)).filter(Boolean))
+        new Set(allExercises.map(ex => capitalize(ex.equipment)).filter(Boolean))
       ).sort();
 
       const primaryMusclesSet = new Set<string>();
       const exercisesByMuscle: { [muscle: string]: Exercise[] } = {};
 
-      exercises.forEach(exercise => {
-        exercise.primaryMuscles.forEach(muscle => {
+      allExercises.forEach(exercise => {
+        exercise.primaryMuscles.forEach((muscle: string) => {
           const capitalizedMuscle = capitalize(muscle);
           const combinedMuscle = combineMuscles(capitalizedMuscle);
           primaryMusclesSet.add(combinedMuscle);
@@ -55,7 +58,7 @@ export const useExerciseOptions = (): ExerciseOptions => {
       });
 
       const primaryMuscles = Array.from(primaryMusclesSet).sort();
-      const categories = Array.from(new Set(exercises.map(ex => capitalize(ex.category)))).sort();
+      const categories = Array.from(new Set(allExercises.map(ex => capitalize(ex.category)))).sort();
 
       setOptions({
         equipmentTypes,

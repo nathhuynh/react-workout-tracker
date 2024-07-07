@@ -6,6 +6,7 @@ import Workout from './components/CurrentWorkout';
 import Layout from './components/Layout';
 import AddCustomExercise from './components/AddCustomExercise';
 import NewMesocycle from './components/NewMesocycle';
+import Mesocycles from './components/Mesocycles'
 
 interface Exercise {
   name: string;
@@ -29,6 +30,7 @@ const App: React.FC = () => {
             <Route path="/workout" element={<Workout />} />
             <Route path="/addcustomexercise" element={<AddCustomExercise />} />
             <Route path="/new-mesocycle" element={<NewMesocycle />} />
+            <Route path="/mesocycles" element={<Mesocycles />} />
           </Routes>
         </main>
       </Layout>
