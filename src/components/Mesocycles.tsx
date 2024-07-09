@@ -41,7 +41,7 @@ const Mesocycles: React.FC = () => {
             endDate.setDate(startDate.getDate() + duration * 7);
 
             const trainingDays = new Map<string, any>(selectedMesocycle.days);
-            const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
             let currentDayIndex = startDate.getDay();
             let trainingDayFound = false;

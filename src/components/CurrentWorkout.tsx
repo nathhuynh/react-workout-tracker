@@ -11,6 +11,7 @@ interface Set {
   weight: number;
   reps: number;
   logged: boolean;
+  type?: 'regular' | 'dropset';
 }
 
 type ExerciseMap = Map<string, Set[]>;
@@ -29,6 +30,9 @@ const CurrentWorkout: React.FC = () => {
   });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+
+  const mesocycleStartDate = new Date(localStorage.getItem('mesocycleStartDate') || new Date().toISOString());
+  const duration = Number(localStorage.getItem('mesocycleDuration') || 4);
 
   useEffect(() => {
     const loadExercises = async () => {
@@ -51,12 +55,12 @@ const CurrentWorkout: React.FC = () => {
     localStorage.setItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`, notes);
   }, [notes, selectedDate]);
 
-  const handleAddSet = (exerciseName: string) => {
+  const handleAddSet = (exerciseName: string, type: 'regular' | 'dropset' = 'regular') => {
     setWorkoutExercises(prev => {
       const updated = new Map(prev);
       const sets = [...(updated.get(exerciseName) || [])];
       const lastSet = sets[sets.length - 1] || { weight: 0, reps: 0, logged: false };
-      sets.push({ weight: lastSet.weight, reps: lastSet.reps, logged: false });
+      sets.push({ weight: lastSet.weight, reps: lastSet.reps, logged: false, type });
       updated.set(exerciseName, sets);
       return updated;
     });
@@ -131,6 +135,7 @@ const CurrentWorkout: React.FC = () => {
 
   const options = [
     { value: 'addSet', label: 'Add Set' },
+    { value: 'addDropset', label: 'Add Dropset' },
     { value: 'removeSet', label: 'Remove Set' },
     { value: 'removeExercise', label: 'Remove Exercise' },
   ];
@@ -141,6 +146,9 @@ const CurrentWorkout: React.FC = () => {
     switch (option.value) {
       case 'addSet':
         handleAddSet(exerciseName);
+        break;
+      case 'addDropset':
+        handleAddSet(exerciseName, 'dropset');
         break;
       case 'removeSet':
         handleRemoveSet(exerciseName, workoutExercises.get(exerciseName)!.length - 1);
@@ -175,12 +183,37 @@ const CurrentWorkout: React.FC = () => {
     setIsCalendarVisible(false);
   };
 
+  const calculateDayAndWeek = (selectedDate: Date, startDate: Date, duration: number) => {
+    const start = new Date(startDate);
+    const selected = new Date(selectedDate);
+    const dayDiff = Math.floor((selected.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    let weekNumber = Math.floor(dayDiff / 7) + 1;
+    let dayNumber = (dayDiff % 7) + 1;
+
+    if (dayDiff < 0 || weekNumber - 1 > duration){
+      weekNumber = 0;
+      dayNumber = 0;
+    }
+
+    return { week: weekNumber, day: dayNumber };
+  };
+
+  const { week, day } = calculateDayAndWeek(selectedDate, mesocycleStartDate, duration);
+
   return (
     <div className="min-h-screen flex">
       <main className="flex-1 p-6 bg-gray-100">
         <div className="max-w-3xl mx-auto">
           <header className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-black">{selectedDate.toDateString()}</h2>
+            <div>
+              <h2 className="text-2xl font-semibold text-black">
+                {selectedDate.toDateString()}
+              </h2>
+              <h2 className="text-2xl text-black">
+                Day {day} Week {week}
+              </h2>
+            </div>
             <button
               className="bg-violet-950 text-white px-4 py-2 rounded"
               onClick={() => setIsCalendarVisible(!isCalendarVisible)}
@@ -239,7 +272,7 @@ const CurrentWorkout: React.FC = () => {
                   <div className="flex flex-col space-y-2">
                     {sets.map((set, setIndex) => (
                       <div key={setIndex} className="grid grid-cols-4 gap-4 items-center border-t py-2">
-                        <div className="flex items-center justify-center text-black">{setIndex + 1}</div>
+                        <div className="flex items-center justify-center text-black">{set.type === 'dropset' ? 'DROPSET' : setIndex + 1}</div>
                         <div className="flex-1">
                           <Select
                             options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
