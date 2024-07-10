@@ -41,7 +41,7 @@ const NewMesocycle: React.FC = () => {
     useEffect(() => {
         const fetchTemplates = async () => {
             try {
-                const response = await fetch('data/mesocycle-templates.json');
+                const response = await fetch('/data/mesocycle-templates.json');
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Fetched templates:', data);

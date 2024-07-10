@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -20,40 +22,58 @@ const CurrentWorkout: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [workoutExercises, setWorkoutExercises] = useState<ExerciseMap>(() => {
-    const savedExercises = localStorage.getItem(`workoutExercises_${new Date().toISOString().split('T')[0]}`);
-    return savedExercises ? new Map(JSON.parse(savedExercises)) : new Map();
-  });
-  const [notes, setNotes] = useState(() => {
-    const savedNotes = localStorage.getItem(`workoutNotes_${new Date().toISOString().split('T')[0]}`);
-    return savedNotes ? savedNotes : '';
-  });
+  const [workoutExercises, setWorkoutExercises] = useState<ExerciseMap>(new Map());
+  const [notes, setNotes] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [mesocycleStartDate, setMesocycleStartDate] = useState(new Date());
+  const [duration, setDuration] = useState(4);
 
-  const mesocycleStartDate = new Date(localStorage.getItem('mesocycleStartDate') || new Date().toISOString());
-  const duration = Number(localStorage.getItem('mesocycleDuration') || 4);
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      const startDate = localStorage.getItem('mesocycleStartDate') || new Date().toISOString();
+      setMesocycleStartDate(new Date(startDate));
+      setDuration(Number(localStorage.getItem('mesocycleDuration') || 4));
+    }
+  }, []);
 
   useEffect(() => {
     const loadExercises = async () => {
       const data: Exercise[] = await fetchExercises();
       setExercises(data);
 
-      const savedCustomExercises = localStorage.getItem('customExercises');
-      if (savedCustomExercises) {
-        setCustomExercises(JSON.parse(savedCustomExercises));
+      if (typeof window !== 'undefined') {
+        const savedCustomExercises = localStorage.getItem('customExercises');
+        if (savedCustomExercises) {
+          setCustomExercises(JSON.parse(savedCustomExercises));
+        }
       }
     };
     loadExercises();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(Array.from(workoutExercises.entries())));
-  }, [workoutExercises, selectedDate]);
+    if (isMounted) {
+      const savedExercises = localStorage.getItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`);
+      setWorkoutExercises(savedExercises ? new Map(JSON.parse(savedExercises)) : new Map());
+      const savedNotes = localStorage.getItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`);
+      setNotes(savedNotes || '');
+    }
+  }, [isMounted, selectedDate]);
 
   useEffect(() => {
-    localStorage.setItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`, notes);
-  }, [notes, selectedDate]);
+    if (isMounted) {
+      localStorage.setItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(Array.from(workoutExercises.entries())));
+    }
+  }, [workoutExercises, selectedDate, isMounted]);
+
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`, notes);
+    }
+  }, [notes, selectedDate, isMounted]);
 
   const handleAddSet = (exerciseName: string, type: 'regular' | 'dropset' = 'regular') => {
     setWorkoutExercises(prev => {
@@ -175,14 +195,21 @@ const CurrentWorkout: React.FC = () => {
 
   const handleDateChange = (value: Date | Date[] | null) => {
     if (!value || Array.isArray(value)) return;
-    setSelectedDate(value);
-    const savedExercises = localStorage.getItem(`workoutExercises_${value.toISOString().split('T')[0]}`);
-    setWorkoutExercises(savedExercises ? new Map(JSON.parse(savedExercises)) : new Map());
-    const savedNotes = localStorage.getItem(`workoutNotes_${value.toISOString().split('T')[0]}`);
-    setNotes(savedNotes || '');
+    const normalisedDate = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+    setSelectedDate(normalisedDate);
+  
+    if (isMounted) {
+      const dateKey = normalisedDate.toISOString().split('T')[0];
+      const savedExercises = localStorage.getItem(`workoutExercises_${dateKey}`);
+      setWorkoutExercises(savedExercises ? new Map(JSON.parse(savedExercises)) : new Map());
+      console.log(`workoutExercises_${dateKey}`);
+      const savedNotes = localStorage.getItem(`workoutNotes_${dateKey}`);
+      setNotes(savedNotes || '');
+    }
+  
     setIsCalendarVisible(false);
   };
-
+  
   const calculateDayAndWeek = (selectedDate: Date, startDate: Date, duration: number) => {
     const start = new Date(startDate);
     const selected = new Date(selectedDate);
@@ -191,7 +218,7 @@ const CurrentWorkout: React.FC = () => {
     let weekNumber = Math.floor(dayDiff / 7) + 1;
     let dayNumber = (dayDiff % 7) + 1;
 
-    if (dayDiff < 0 || weekNumber - 1 > duration){
+    if (dayDiff < 0 || weekNumber - 1 > duration) {
       weekNumber = 0;
       dayNumber = 0;
     }

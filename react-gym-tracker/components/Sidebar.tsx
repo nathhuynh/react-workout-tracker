@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface SidebarProps {
   isSidebarCollapsed: boolean;
@@ -18,19 +19,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
             </div>
           </div>
           <nav className="flex-1 px-2 py-4">
-            <a href="/workout" className="block px-2 py-2 text-sm font-semibold bg-gray-700 rounded">Current workout</a>
-            <a href="/mesocycles" className="block px-2 py-2 text-sm">Mesocycles</a>
-            <a href="#" className="block px-2 py-2 text-sm">Templates</a>
-            <a href="/addcustomexercise" className="block px-2 py-2 text-sm">Custom exercises</a>
-            <a href="/new-mesocycle" className="block px-2 py-2 text-sm">Plan a new mesocycle</a>
+            <Link href="/workout" className="block px-2 py-2 text-sm font-semibold bg-gray-700 rounded">Current workout</Link>
+            <Link href="/mesocycles" className="block px-2 py-2 text-sm">Mesocycles</Link>
+            <Link href="/templates" className="block px-2 py-2 text-sm">Templates</Link>
+            <Link href="/addcustomexercise" className="block px-2 py-2 text-sm">Custom exercises</Link>
+            <Link href="/new-mesocycle" className="block px-2 py-2 text-sm">Plan a new mesocycle</Link>
           </nav>
           <div className="px-2 py-4 bg-gray-800">
-            <a href="#" className="block px-2 py-2 text-sm">Light Theme</a>
-            <a href="#" className="block px-2 py-2 text-sm">Profile</a>
-            <a href="#" className="block px-2 py-2 text-sm">Subscription</a>
-            <a href="#" className="block px-2 py-2 text-sm">Sign out</a>
-            <a href="#" className="block px-2 py-2 text-sm">Help</a>
-            <a href="#" className="block px-2 py-2 text-sm">Leave a review</a>
+            <Link href="/light-theme" className="block px-2 py-2 text-sm">Light Theme</Link>
+            <Link href="/profile" className="block px-2 py-2 text-sm">Profile</Link>
+            <Link href="/subscription" className="block px-2 py-2 text-sm">Subscription</Link>
+            <Link href="/sign-out" className="block px-2 py-2 text-sm">Sign out</Link>
+            <Link href="/help" className="block px-2 py-2 text-sm">Help</Link>
+            <Link href="/review" className="block px-2 py-2 text-sm">Leave a review</Link>
           </div>
         </aside>
       )}

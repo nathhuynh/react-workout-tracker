@@ -1,8 +1,6 @@
-import withTM from 'next-transpile-modules';
+const withTM = require('next-transpile-modules')(['react-calendar', 'react-dropdown', 'react-select']);
 
-const withTranspileModules = withTM(['react-calendar', 'react-dropdown']);
-
-export default withTranspileModules({
+module.exports = withTM({
   output: 'export',
   distDir: './dist',
   webpack: (config, { isServer }) => {
@@ -19,7 +17,10 @@ export default withTranspileModules({
         },
         'postcss-loader',
       ],
-      include: /node_modules/,
+      include: [
+        /node_modules/,
+        /styles/,
+      ],
     });
 
     return config;
