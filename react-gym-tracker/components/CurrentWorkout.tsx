@@ -4,7 +4,7 @@ import 'react-calendar/dist/Calendar.css';
 import Dropdown from 'react-dropdown';
 import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
-import { fetchExercises, Exercise } from '../src/utils/exerciseService';
+import { fetchExercises, Exercise } from '../utils/exerciseService';
 import '../styles/DotDropdownMenu.css';
 
 interface Set {

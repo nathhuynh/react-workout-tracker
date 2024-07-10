@@ -4,7 +4,7 @@ import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FaTrash, FaPen, FaCopy } from 'react-icons/fa';
-import { useExerciseOptions } from '../src/utils/useExerciseOptions';
+import { useExerciseOptions } from '../utils/useExerciseOptions';
 
 interface Exercise {
     name: string;

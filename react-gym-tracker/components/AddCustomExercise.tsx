@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Select, { MultiValue, SingleValue } from 'react-select';
-import { useExerciseOptions } from '../src/utils/useExerciseOptions';
+import { useExerciseOptions } from '../utils/useExerciseOptions';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
 
