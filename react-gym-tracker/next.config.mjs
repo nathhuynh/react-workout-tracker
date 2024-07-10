@@ -1,6 +1,8 @@
 import withTM from 'next-transpile-modules';
 
-export default withTM({
+const withTranspileModules = withTM(['react-calendar', 'react-dropdown']);
+
+export default withTranspileModules({
   output: 'export',
   distDir: './dist',
   webpack: (config, { isServer }) => {
@@ -8,7 +10,13 @@ export default withTM({
       test: /\.css$/,
       use: [
         'style-loader',
-        'css-loader',
+        {
+          loader: 'css-loader',
+          options: {
+            importLoaders: 1,
+            modules: false,
+          },
+        },
         'postcss-loader',
       ],
       include: /node_modules/,
@@ -16,4 +24,4 @@ export default withTM({
 
     return config;
   },
-})(['react-calendar', 'react-dropdown', 'react-select']);
+});

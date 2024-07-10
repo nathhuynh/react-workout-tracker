@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Hero from '../components/Hero';
 import Workout from '../components/CurrentWorkout';
 // import Navbar from './components/Navbar';
-import Layout from '../components/Layout';
+import Layout from '../components/SidebarLayout';
 import AddCustomExercise from '../components/AddCustomExercise';
 import NewMesocycle from '../components/NewMesocycle';
 import Mesocycles from '../components/Mesocycles'
