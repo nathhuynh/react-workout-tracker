@@ -10,9 +10,9 @@ const Hero: React.FC = () => {
         Track Your Gains, Achieve Your Goals: Your{' '}
         <span className="uppercase font-medium text-violet-400">Ultimate</span> Workout Gym Tracker
       </p>
-      <button className="rounded-md border-[2px] border-solid border-violet-400 bg-slate-950 px-7 py-5 buttonShadow duration-150">
+      {/* <button className="rounded-md border-[2px] border-solid border-violet-400 bg-slate-950 px-7 py-5 buttonShadow duration-150">
         PUSH
-      </button>
+      </button> */}
     </div>
   );
 };

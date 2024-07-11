@@ -8,10 +8,10 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarCollapsed }) => {
   return (
-    <div className="min-h-screen flex">
+    <div className={`min-h-screen flex ${isSidebarCollapsed} bg-gray-900 text-white flex-col transition-all duration-300`}>
       {/* Sidebar */}
       {isSidebarCollapsed ? null : (
-        <aside className="w-64 bg-gray-900 text-white flex flex-col">
+        <aside className="flex flex-col flex-grow">
           <div className="px-4 py-2 bg-gray-800 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-right">RP</h1>

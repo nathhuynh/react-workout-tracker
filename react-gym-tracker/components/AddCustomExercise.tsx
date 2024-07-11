@@ -3,6 +3,7 @@ import Select, { MultiValue, SingleValue } from 'react-select';
 import { useExerciseOptions } from '../utils/useExerciseOptions';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
+import { FaEllipsisV } from 'react-icons/fa';
 
 const AddCustomExercise: React.FC = () => {
     const [name, setName] = useState('');
@@ -12,6 +13,7 @@ const AddCustomExercise: React.FC = () => {
     const [customExercises, setCustomExercises] = useState<any[]>([]);
     const [selectedExercise, setSelectedExercise] = useState<SingleValue<{ value: string; label: string }>>(null);
     const [isFormVisible, setIsFormVisible] = useState(false);
+    const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
     const { equipmentTypes, primaryMuscles: muscleOptions, categories } = useExerciseOptions();
 
     useEffect(() => {
@@ -77,6 +79,7 @@ const AddCustomExercise: React.FC = () => {
 
         setCustomExercises(updatedCustomExercises);
         localStorage.setItem('customExercises', JSON.stringify(updatedCustomExercises));
+        setIsFormVisible(false);
     };
 
     const selectOptions = (options: string[]) => options.map(option => ({ value: option, label: option }));
@@ -97,180 +100,10 @@ const AddCustomExercise: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col">
             <main className="flex-1 p-6 bg-gray-100">
-                <div className="max-w-3xl mx-auto bg-white p-4 rounded shadow-md">
-                    <h2 className="text-2xl font-semibold text-black mb-4">Manage Custom Exercises</h2>
-                    {isFormVisible && selectedExercise && (
-                        <div className="mt-4">
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-2 border border-gray-300 rounded text-black h-10 min-h-10 focus:border-purple-500 hover:border-purple-700"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    placeholder="Enter an exercise"
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Equipment Type</label>
-                                <Select
-                                    options={selectOptions(equipmentTypes)}
-                                    value={equipmentType}
-                                    onChange={(newValue) => setEquipmentType(newValue)}
-                                    placeholder="Choose equipment"
-                                    classNamePrefix="react-select"
-                                    styles={{
-                                        control: (provided, state) => ({
-                                            ...provided,
-                                            height: '40px',
-                                            minHeight: '40px',
-                                            justifyContent: 'center',
-                                            borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                            '&:hover': {
-                                                borderColor: '#4A148C',
-                                            },
-                                        }),
-                                        indicatorSeparator: (provided) => ({
-                                            ...provided,
-                                            display: 'none'
-                                        }),
-                                        dropdownIndicator: (provided) => ({
-                                            ...provided,
-                                            color: '#718096'
-                                        }),
-                                        singleValue: (provided) => ({
-                                            ...provided,
-                                            display: 'flex',
-                                            justifyContent: 'left'
-                                        }),
-                                        menu: (provided) => ({
-                                            ...provided,
-                                            color: 'black',
-                                        })
-                                    }}
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Muscles</label>
-                                <Select
-                                    options={selectOptions(muscleOptions)}
-                                    value={primaryMuscles}
-                                    isMulti
-                                    onChange={(newValue) => setPrimaryMuscles(newValue as MultiValue<{ value: string; label: string }>)}
-                                    placeholder="Choose muscles worked"
-                                    classNamePrefix="react-select"
-                                    styles={{
-                                        control: (provided, state) => ({
-                                            ...provided,
-                                            height: '40px',
-                                            minHeight: '40px',
-                                            justifyContent: 'center',
-                                            borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                            '&:hover': {
-                                                borderColor: '#4A148C',
-                                            },
-                                        }),
-                                        indicatorSeparator: (provided) => ({
-                                            ...provided,
-                                            display: 'none'
-                                        }),
-                                        dropdownIndicator: (provided) => ({
-                                            ...provided,
-                                            color: '#718096'
-                                        }),
-                                        singleValue: (provided) => ({
-                                            ...provided,
-                                            display: 'flex',
-                                            justifyContent: 'left'
-                                        }),
-                                        menu: (provided) => ({
-                                            ...provided,
-                                            color: 'black'
-                                        })
-                                    }}
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Category</label>
-                                <Select
-                                    options={selectOptions(categories)}
-                                    value={category}
-                                    onChange={(newValue) => setCategory(newValue)}
-                                    placeholder="Choose exercise category"
-                                    classNamePrefix="react-select"
-                                    styles={{
-                                        control: (provided, state) => ({
-                                            ...provided,
-                                            height: '40px',
-                                            minHeight: '40px',
-                                            justifyContent: 'center',
-                                            borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                            '&:hover': {
-                                                borderColor: '#4A148C',
-                                            },
-                                        }),
-                                        indicatorSeparator: (provided) => ({
-                                            ...provided,
-                                            display: 'none'
-                                        }),
-                                        dropdownIndicator: (provided) => ({
-                                            ...provided,
-                                            color: '#718096'
-                                        }),
-                                        singleValue: (provided) => ({
-                                            ...provided,
-                                            display: 'flex',
-                                            justifyContent: 'left'
-                                        }),
-                                        menu: (provided) => ({
-                                            ...provided,
-                                            color: 'black',
-                                        })
-                                    }}
-                                />
-                            </div>
-                            <div className="flex justify-between">
-                                <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => {
-                                    setName('');
-                                    setEquipmentType(null);
-                                    setPrimaryMuscles([]);
-                                    setCategory(null);
-                                    setIsFormVisible(false);
-                                    setSelectedExercise(null);
-                                }}>Clear</button>
-                                <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleUpdate}>Update</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div className="max-w-3xl mx-auto mt-6 bg-white p-4 rounded shadow-md">
+                <div className="max-w-3xl mx-auto flex justify-between items-center">
                     <h2 className="text-2xl font-semibold text-black mb-4">Custom Exercises</h2>
-                    <ul>
-                        {customExercises.map(exercise => (
-                            <li key={exercise.id} className="flex justify-between items-center mb-2">
-                                <span className="text-black">{exercise.name}</span>
-                                <div>
-                                    <button
-                                        className="px-2 py-1 bg-blue-500 text-white rounded mr-2"
-                                        onClick={() => {
-                                            setSelectedExercise({ value: exercise.id, label: exercise.name });
-                                            setIsFormVisible(true);
-                                        }}
-                                    >
-                                        Manage
-                                    </button>
-                                    <button
-                                        className="px-2 py-1 bg-red-500 text-white rounded"
-                                        onClick={() => handleRemove(exercise.id)}
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
                     <button
-                        className="px-4 py-2 bg-blue-500 text-white rounded mt-4"
+                        className="px-4 py-2 bg-blue-500 text-white rounded mb-4"
                         onClick={() => {
                             setIsFormVisible(!isFormVisible);
                             setSelectedExercise(null);
@@ -280,147 +113,201 @@ const AddCustomExercise: React.FC = () => {
                             setCategory(null);
                         }}
                     >
-                        {isFormVisible && !selectedExercise ? 'Cancel' : 'Add Exercise'}
+                        {isFormVisible && !selectedExercise ? 'Cancel' : '+ NEW'}
                     </button>
-                    {isFormVisible && !selectedExercise && (
-                        <div className="mt-4">
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-2 border border-gray-300 rounded text-black h-10 min-h-10 focus:border-purple-500 hover:border-purple-700"
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    placeholder="Enter an exercise"
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Equipment Type</label>
-                                <Select
-                                    options={selectOptions(equipmentTypes)}
-                                    value={equipmentType}
-                                    onChange={(newValue) => setEquipmentType(newValue)}
-                                    placeholder="Choose equipment"
-                                    classNamePrefix="react-select"
-                                    styles={{
-                                        control: (provided, state) => ({
-                                            ...provided,
-                                            height: '40px',
-                                            minHeight: '40px',
-                                            justifyContent: 'center',
-                                            borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                            '&:hover': {
-                                                borderColor: '#4A148C',
-                                            },
-                                        }),
-                                        indicatorSeparator: (provided) => ({
-                                            ...provided,
-                                            display: 'none'
-                                        }),
-                                        dropdownIndicator: (provided) => ({
-                                            ...provided,
-                                            color: '#718096'
-                                        }),
-                                        singleValue: (provided) => ({
-                                            ...provided,
-                                            display: 'flex',
-                                            justifyContent: 'left'
-                                        }),
-                                        menu: (provided) => ({
-                                            ...provided,
-                                            color: 'black',
-                                        })
-                                    }}
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Muscles</label>
-                                <Select
-                                    options={selectOptions(muscleOptions)}
-                                    value={primaryMuscles}
-                                    isMulti
-                                    onChange={(newValue) => setPrimaryMuscles(newValue as MultiValue<{ value: string; label: string }>)}
-                                    placeholder="Choose muscles worked"
-                                    classNamePrefix="react-select"
-                                    styles={{
-                                        control: (provided, state) => ({
-                                            ...provided,
-                                            height: '40px',
-                                            minHeight: '40px',
-                                            justifyContent: 'center',
-                                            borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                            '&:hover': {
-                                                borderColor: '#4A148C',
-                                            },
-                                        }),
-                                        indicatorSeparator: (provided) => ({
-                                            ...provided,
-                                            display: 'none'
-                                        }),
-                                        dropdownIndicator: (provided) => ({
-                                            ...provided,
-                                            color: '#718096'
-                                        }),
-                                        singleValue: (provided) => ({
-                                            ...provided,
-                                            display: 'flex',
-                                            justifyContent: 'left'
-                                        }),
-                                        menu: (provided) => ({
-                                            ...provided,
-                                            color: 'black'
-                                        })
-                                    }}
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 text-black">Category</label>
-                                <Select
-                                    options={selectOptions(categories)}
-                                    value={category}
-                                    onChange={(newValue) => setCategory(newValue)}
-                                    placeholder="Choose exercise category"
-                                    classNamePrefix="react-select"
-                                    styles={{
-                                        control: (provided, state) => ({
-                                            ...provided,
-                                            height: '40px',
-                                            minHeight: '40px',
-                                            justifyContent: 'center',
-                                            borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                            '&:hover': {
-                                                borderColor: '#4A148C',
-                                            },
-                                        }),
-                                        indicatorSeparator: (provided) => ({
-                                            ...provided,
-                                            display: 'none'
-                                        }),
-                                        dropdownIndicator: (provided) => ({
-                                            ...provided,
-                                            color: '#718096'
-                                        }),
-                                        singleValue: (provided) => ({
-                                            ...provided,
-                                            display: 'flex',
-                                            justifyContent: 'left'
-                                        }),
-                                        menu: (provided) => ({
-                                            ...provided,
-                                            color: 'black',
-                                        })
-                                    }}
-                                />
-                            </div>
-                            <div className="flex justify-between">
-                                <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => {
-                                    setName('');
-                                    setEquipmentType(null);
-                                    setPrimaryMuscles([]);
-                                    setCategory(null);
-                                    setIsFormVisible(false);
-                                }}>Clear</button>
-                                <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleSave}>Save</button>
+                </div>
+
+
+                <div className="max-w-3xl mx-auto bg-white p-4 pt-0 rounded shadow-md">
+                    <ul>
+                        {customExercises.map(exercise => (
+                            <li key={exercise.id} className="border-b border-gray-300 flex justify-between items-center py-4">
+                                <div>
+                                    <span className="block text-sm text-gray-600 uppercase">{exercise.primaryMuscles.join(', ')}</span>
+                                    <span className="block font-semibold">{exercise.name}</span>
+                                    <span className="block text-sm text-gray-600">{exercise.equipment}</span>
+
+                                </div>
+                                <div className="relative">
+                                    <button
+                                        className="text-gray-600 mb-10"
+                                        onClick={() => setDropdownVisible(dropdownVisible === exercise.id ? null : exercise.id)}
+                                    >
+                                        <FaEllipsisV />
+                                    </button>
+                                    {dropdownVisible === exercise.id && (
+                                        <div className="absolute right-0 -mt-8 w-48 bg-white border border-gray-300 rounded shadow-md z-10">
+                                            <button
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                                onClick={() => {
+                                                    setSelectedExercise({ value: exercise.id, label: exercise.name });
+                                                    setIsFormVisible(true);
+                                                    setDropdownVisible(null);
+                                                }}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                                onClick={() => handleRemove(exercise.id)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+
+                    {isFormVisible && (
+                        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+                            <div className="bg-white p-6 rounded shadow-md w-1/3">
+                                <div className="mt-4">
+                                    <h4 className="text-lg font-semibold mb-4">CREATE CUSTOM EXERCISE</h4>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium mb-1">Name</label>
+                                        <input
+                                            type="text"
+                                            className="w-full p-2 border border-gray-300 rounded h-10 min-h-10 focus:border-purple-500 hover:border-purple-700"
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            placeholder="Enter an exercise"
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium mb-1">Equipment Type</label>
+                                        <Select
+                                            options={selectOptions(equipmentTypes)}
+                                            value={equipmentType}
+                                            onChange={(newValue) => setEquipmentType(newValue)}
+                                            placeholder="Choose equipment"
+                                            classNamePrefix="react-select"
+                                            styles={{
+                                                control: (provided, state) => ({
+                                                    ...provided,
+                                                    height: '40px',
+                                                    minHeight: '40px',
+                                                    justifyContent: 'center',
+                                                    borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                                    '&:hover': {
+                                                        borderColor: '#4A148C',
+                                                    },
+                                                }),
+                                                indicatorSeparator: (provided) => ({
+                                                    ...provided,
+                                                    display: 'none'
+                                                }),
+                                                dropdownIndicator: (provided) => ({
+                                                    ...provided,
+                                                    color: '#718096'
+                                                }),
+                                                singleValue: (provided) => ({
+                                                    ...provided,
+                                                    display: 'flex',
+                                                    justifyContent: 'left'
+                                                }),
+                                                menu: (provided) => ({
+                                                    ...provided,
+                                                    color: 'black',
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium mb-1">Muscles</label>
+                                        <Select
+                                            options={selectOptions(muscleOptions)}
+                                            value={primaryMuscles}
+                                            isMulti
+                                            onChange={(newValue) => setPrimaryMuscles(newValue as MultiValue<{ value: string; label: string }>)}
+                                            placeholder="Choose muscles worked"
+                                            classNamePrefix="react-select"
+                                            styles={{
+                                                control: (provided, state) => ({
+                                                    ...provided,
+                                                    height: '40px',
+                                                    minHeight: '40px',
+                                                    justifyContent: 'center',
+                                                    borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                                    '&:hover': {
+                                                        borderColor: '#4A148C',
+                                                    },
+                                                }),
+                                                indicatorSeparator: (provided) => ({
+                                                    ...provided,
+                                                    display: 'none'
+                                                }),
+                                                dropdownIndicator: (provided) => ({
+                                                    ...provided,
+                                                    color: '#718096'
+                                                }),
+                                                singleValue: (provided) => ({
+                                                    ...provided,
+                                                    display: 'flex',
+                                                    justifyContent: 'left'
+                                                }),
+                                                menu: (provided) => ({
+                                                    ...provided,
+                                                    color: 'black'
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium mb-1">Category</label>
+                                        <Select
+                                            options={selectOptions(categories)}
+                                            value={category}
+                                            onChange={(newValue) => setCategory(newValue)}
+                                            placeholder="Choose exercise category"
+                                            classNamePrefix="react-select"
+                                            styles={{
+                                                control: (provided, state) => ({
+                                                    ...provided,
+                                                    height: '40px',
+                                                    minHeight: '40px',
+                                                    justifyContent: 'center',
+                                                    borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                                    '&:hover': {
+                                                        borderColor: '#4A148C',
+                                                    },
+                                                }),
+                                                indicatorSeparator: (provided) => ({
+                                                    ...provided,
+                                                    display: 'none'
+                                                }),
+                                                dropdownIndicator: (provided) => ({
+                                                    ...provided,
+                                                    color: '#718096'
+                                                }),
+                                                singleValue: (provided) => ({
+                                                    ...provided,
+                                                    display: 'flex',
+                                                    justifyContent: 'left'
+                                                }),
+                                                menu: (provided) => ({
+                                                    ...provided,
+                                                    color: 'black',
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => {
+                                            setName('');
+                                            setEquipmentType(null);
+                                            setPrimaryMuscles([]);
+                                            setCategory(null);
+                                            setIsFormVisible(false);
+                                        }}>Cancel</button>
+                                        {selectedExercise ? (
+                                            <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleUpdate}>Update</button>
+                                        ) : (
+                                            <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleSave}>Save</button>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}

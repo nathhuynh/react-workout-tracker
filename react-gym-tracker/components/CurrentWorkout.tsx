@@ -197,7 +197,7 @@ const CurrentWorkout: React.FC = () => {
     if (!value || Array.isArray(value)) return;
     const normalisedDate = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
     setSelectedDate(normalisedDate);
-  
+
     if (isMounted) {
       const dateKey = normalisedDate.toISOString().split('T')[0];
       const savedExercises = localStorage.getItem(`workoutExercises_${dateKey}`);
@@ -206,10 +206,10 @@ const CurrentWorkout: React.FC = () => {
       const savedNotes = localStorage.getItem(`workoutNotes_${dateKey}`);
       setNotes(savedNotes || '');
     }
-  
+
     setIsCalendarVisible(false);
   };
-  
+
   const calculateDayAndWeek = (selectedDate: Date, startDate: Date, duration: number) => {
     const start = new Date(startDate);
     const selected = new Date(selectedDate);
@@ -230,8 +230,8 @@ const CurrentWorkout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex">
-      <main className="flex-1 p-6 bg-gray-100">
-        <div className="max-w-3xl mx-auto">
+      <main className="flex-1 pt-10 bg-gray-100">
+      <div className="max-w-3xl mx-auto">
           <header className="flex justify-between items-center mb-4">
             <div>
               <h2 className="text-2xl font-semibold text-black">
@@ -267,9 +267,10 @@ const CurrentWorkout: React.FC = () => {
                 }
               }}
               placeholder="Add Exercise"
-              className="text-black"
+              className="text-black w-full"
               classNamePrefix="react-select"
             />
+
           </div>
 
           {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => (
@@ -400,6 +401,7 @@ const CurrentWorkout: React.FC = () => {
               value={notes}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
             ></textarea>
+
           </div>
         </div>
       </main>
