@@ -16,6 +16,12 @@ interface Day {
     exercises: { muscleGroup: string, exercise: string | null }[];
 }
 
+interface Mesocycle {
+    name: string;
+    templateName: string;
+    days: [string, { muscleGroup: string; exercise: string | null }[]][];
+}
+
 const dayOptions = [
     { label: 'Monday', value: 'Monday' },
     { label: 'Tuesday', value: 'Tuesday' },
@@ -37,6 +43,7 @@ const NewMesocycle: React.FC = () => {
     const [copyTargetDayIndex, setCopyTargetDayIndex] = useState<number | null>(null);
     const [mesocycleName, setMesocycleName] = useState('New Mesocycle');
     const [isEditingName, setIsEditingName] = useState(false);
+    const [templateName, setTemplateName] = useState('');
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -60,7 +67,9 @@ const NewMesocycle: React.FC = () => {
         const savedTemplate = localStorage.getItem('selectedTemplate');
         const savedDays = localStorage.getItem('savedDays');
         if (savedTemplate) {
-            setSelectedTemplate(JSON.parse(savedTemplate));
+            const parsedTemplate = JSON.parse(savedTemplate);
+            setSelectedTemplate(parsedTemplate);
+            setTemplateName(parsedTemplate.label);
         }
         if (savedDays) {
             setDays(JSON.parse(savedDays));
@@ -77,6 +86,7 @@ const NewMesocycle: React.FC = () => {
     const handleTemplateChange = (option: SingleValue<{ label: string, value: string, days: Day[] }>) => {
         if (option) {
             setSelectedTemplate(option);
+            setTemplateName(option.label);
             setDays(option.days);
         }
     };
@@ -143,7 +153,7 @@ const NewMesocycle: React.FC = () => {
         const mesocycle = new Map(days.map(day => [day.name, day.exercises]));
         const savedMesocycles = localStorage.getItem('mesocycles');
         const mesocycles = savedMesocycles ? JSON.parse(savedMesocycles) : [];
-        mesocycles.push({ name: mesocycleName, days: Array.from(mesocycle.entries()) });
+        mesocycles.push({ name: mesocycleName, templateName: selectedTemplate?.label, days: Array.from(mesocycle.entries()) });
         localStorage.setItem('mesocycles', JSON.stringify(mesocycles));
         alert('Mesocycle created and saved!');
         console.log("Mesocycle: ", mesocycle)

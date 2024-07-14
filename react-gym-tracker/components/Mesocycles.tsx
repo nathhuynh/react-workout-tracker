@@ -1,18 +1,29 @@
+// Mesocycles.tsx
+
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaTrash } from 'react-icons/fa';
+import { FaEllipsisV } from 'react-icons/fa';
+import Dropdown from 'react-dropdown';
+import 'react-dropdown/style.css';
 
 interface Day {
   name: string;
   exercises: { muscleGroup: string, exercise: string | null }[];
 }
 
+interface Mesocycle {
+  name: string;
+  templateName: string;
+  days: [string, { muscleGroup: string; exercise: string | null }[]][];
+}
+
 const Mesocycles: React.FC = () => {
-  const [mesocycles, setMesocycles] = useState<{ name: string; days: [string, { muscleGroup: string; exercise: string | null }[]][] }[]>([]);
-  const [selectedMesocycle, setSelectedMesocycle] = useState<{ name: string; days: [string, { muscleGroup: string; exercise: string | null }[]][] } | null>(null);
+  const [mesocycles, setMesocycles] = useState<Mesocycle[]>([]);
+  const [selectedMesocycle, setSelectedMesocycle] = useState<Mesocycle | null>(null);
   const [duration, setDuration] = useState<number>(4); // default to 4 weeks
   const [showModal, setShowModal] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,7 +39,7 @@ const Mesocycles: React.FC = () => {
     localStorage.setItem('mesocycles', JSON.stringify(updatedMesocycles));
   };
 
-  const handleSelectMesocycle = (mesocycle: { name: string; days: [string, { muscleGroup: string; exercise: string | null }[]][] }) => {
+  const handleSelectMesocycle = (mesocycle: Mesocycle) => {
     setSelectedMesocycle(mesocycle);
     setShowModal(true);
   };
@@ -80,41 +91,81 @@ const Mesocycles: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col p-6 bg-gray-100">
-      <header className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold text-black">Saved Mesocycles</h2>
-        <Link href="/new-mesocycle">
-          <div className="bg-violet-950 text-white px-4 py-2 rounded uppercase">+ New Mesocycle</div>
-        </Link>
-      </header>
-      <div>
-        {mesocycles.length === 0 ? (
-          <p>No saved mesocycles</p>
-        ) : (
-          <ul>
-            {mesocycles.map((mesocycle, index) => (
-              <li key={index} className="bg-white p-4 rounded shadow mb-2 flex justify-between items-center">
-                <span>{mesocycle.name}</span>
-                <div>
-                  <button
-                    className="text-blue-500 mr-2"
-                    onClick={() => handleSelectMesocycle(mesocycle)}
-                  >
-                    Load
-                  </button>
-                  <button
-                    className="text-red-500"
-                    onClick={() => handleDeleteMesocycle(mesocycle.name)}
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+  const options = [
+    { value: 'load', label: 'Load' },
+    { value: 'delete', label: 'Delete' },
+  ];
+
+  const handleDropdownSelect = (option: any, name: string) => {
+    if (option.value === 'load') {
+      const mesocycle = mesocycles.find(m => m.name === name);
+      if (mesocycle) handleSelectMesocycle(mesocycle);
+    } else if (option.value === 'delete') {
+      handleDeleteMesocycle(name);
+    }
+    setDropdownVisible(null);
+  };
+
+  const CustomControl = () => {
+    return (
+      <div className="w-[40px] justify-center flex items-center cursor-pointer">
+        <FaEllipsisV />
       </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-1 p-6 bg-gray-100">
+        <div className="max-w-3xl mx-auto flex justify-between items-center">
+          <h2 className="text-2xl font-semibold text-black mb-4">Saved Mesocycles</h2>
+          <Link href="/new-mesocycle">
+            <div className="bg-violet-950 text-white px-4 py-2 mb-4 rounded uppercase">+ New</div>
+          </Link>
+        </div>
+
+        <div className="max-w-3xl mx-auto bg-white p-4 pt-0 rounded shadow-md">
+          <ul>
+            {mesocycles.length === 0 ? (
+              <p>No saved mesocycles</p>
+            ) : (
+              mesocycles.map((mesocycle, index) => (
+                <li key={index} className="border-b border-gray-300 flex justify-between items-center py-4">
+                  <div>
+                    <span className="block text-sm text-gray-600 uppercase">{mesocycle.templateName}</span>
+                    <span className="block font-semibold uppercase">{mesocycle.name}</span>
+                    <span className="block text-sm text-gray-600 uppercase">{mesocycle.days.length} DAYS</span>
+                  </div>
+                  <div className="relative">
+                    <button
+                      className="text-gray-600 mb-10"
+                      onClick={() => setDropdownVisible(dropdownVisible === mesocycle.name ? null : mesocycle.name)}
+                    >
+                      <FaEllipsisV />
+                    </button>
+                    {dropdownVisible === mesocycle.name && (
+                      <div className="absolute right-0 -mt-8 w-48 bg-white border border-gray-300 rounded shadow-md z-10">
+                        <button
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                          onClick={() => handleDropdownSelect({ value: 'load' }, mesocycle.name)}
+                        >
+                          Load
+                        </button>
+                        <button
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                          onClick={() => handleDropdownSelect({ value: 'delete' }, mesocycle.name)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      </main>
 
       {showModal && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
