@@ -8,6 +8,9 @@ import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import { fetchExercises, Exercise } from '../utils/exerciseService';
 import '../styles/DotDropdownMenu.css';
+import Stopwatch from '../components/Stopwatch';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faStopwatch, faSquare, faCheckSquare } from '@fortawesome/free-solid-svg-icons';
 
 interface Set {
   weight: number;
@@ -29,6 +32,7 @@ const CurrentWorkout: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [mesocycleStartDate, setMesocycleStartDate] = useState(new Date());
   const [duration, setDuration] = useState(4);
+  const [isStopwatchVisible, setIsStopwatchVisible] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -202,7 +206,6 @@ const CurrentWorkout: React.FC = () => {
       const dateKey = normalisedDate.toISOString().split('T')[0];
       const savedExercises = localStorage.getItem(`workoutExercises_${dateKey}`);
       setWorkoutExercises(savedExercises ? new Map(JSON.parse(savedExercises)) : new Map());
-      console.log(`workoutExercises_${dateKey}`);
       const savedNotes = localStorage.getItem(`workoutNotes_${dateKey}`);
       setNotes(savedNotes || '');
     }
@@ -229,9 +232,9 @@ const CurrentWorkout: React.FC = () => {
   const { week, day } = calculateDayAndWeek(selectedDate, mesocycleStartDate, duration);
 
   return (
-    <div className="min-h-screen flex">
-      <main className="flex-1 pt-10 bg-gray-100">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-1 pt-10 bg-gray-100 w-full">
+        <div className="w-full lg:px-96">
           <header className="flex justify-between items-center mb-4">
             <div>
               <h2 className="text-2xl font-semibold text-black">
@@ -258,6 +261,22 @@ const CurrentWorkout: React.FC = () => {
             </div>
           )}
 
+          {/* Stopwatch */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => setIsStopwatchVisible(!isStopwatchVisible)}
+              className="bg-violet-950 text-white px-4 py-2 rounded flex items-center"
+            >
+              <FontAwesomeIcon icon={faStopwatch} className="mr-2" />
+              {isStopwatchVisible ? 'Hide Stopwatch' : 'Show Stopwatch'}
+            </button>
+          </div>
+          {isStopwatchVisible && (
+            <div className="mb-4">
+              <Stopwatch />
+            </div>
+          )}
+
           <div className="mb-4">
             <Select
               options={exerciseOptions}
@@ -270,11 +289,10 @@ const CurrentWorkout: React.FC = () => {
               className="text-black w-full"
               classNamePrefix="react-select"
             />
-
           </div>
 
           {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => (
-            <div key={exerciseIndex} className="mb-6 p-4 bg-white rounded shadow">
+            <div key={exerciseIndex} className="mb-6 p-4 bg-white rounded shadow w-full">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-semibold text-black">{exerciseName}</h3>
                 <Dropdown
@@ -291,16 +309,15 @@ const CurrentWorkout: React.FC = () => {
 
               {sets && sets.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-4 gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
-                    <div>Set</div>
+                  <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
                     <div>Weight (kg)</div>
                     <div>Reps</div>
                     <div></div>
                   </div>
                   <div className="flex flex-col space-y-2">
                     {sets.map((set, setIndex) => (
-                      <div key={setIndex} className="grid grid-cols-4 gap-4 items-center border-t py-2">
-                        <div className="flex items-center justify-center text-black">{set.type === 'dropset' ? 'DROPSET' : setIndex + 1}</div>
+                      <div key={setIndex} className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center border-t py-2">
+
                         <div className="flex-1">
                           <Select
                             options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
@@ -309,6 +326,7 @@ const CurrentWorkout: React.FC = () => {
                             className="w-full text-black"
                             classNamePrefix="react-select"
                             value={{ value: set.weight.toString(), label: set.weight.toString() }}
+                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
                             styles={{
                               control: (provided, state) => ({
                                 ...provided,
@@ -320,21 +338,17 @@ const CurrentWorkout: React.FC = () => {
                                   borderColor: '#4A148C',
                                 },
                               }),
-                              indicatorSeparator: (provided) => ({
+                              valueContainer: (provided) => ({
                                 ...provided,
-                                display: 'none'
-                              }),
-                              dropdownIndicator: (provided) => ({
-                                ...provided,
-                                color: '#718096'
+                                justifyContent: 'center',
                               }),
                               singleValue: (provided) => ({
                                 ...provided,
-                                display: 'flex',
-                                justifyContent: 'right'
+                                textAlign: 'center',
                               })
                             }}
                           />
+
                         </div>
                         <div className="flex-1">
                           <Select
@@ -344,6 +358,7 @@ const CurrentWorkout: React.FC = () => {
                             className="w-full text-black"
                             classNamePrefix="react-select text-black"
                             value={{ value: set.reps.toString(), label: set.reps.toString() }}
+                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
                             styles={{
                               control: (provided, state) => ({
                                 ...provided,
@@ -355,34 +370,40 @@ const CurrentWorkout: React.FC = () => {
                                   borderColor: '#4A148C',
                                 },
                               }),
-                              indicatorSeparator: (provided) => ({
+                              valueContainer: (provided) => ({
                                 ...provided,
-                                display: 'none'
-                              }),
-                              dropdownIndicator: (provided) => ({
-                                ...provided,
-                                color: '#718096'
+                                justifyContent: 'center',
                               }),
                               singleValue: (provided) => ({
                                 ...provided,
-                                display: 'flex',
-                                justifyContent: 'right'
+                                textAlign: 'center',
                               })
                             }}
                           />
+
                         </div>
                         <div className="flex items-center justify-center">
                           {set.logged ? (
-                            <span className="text-green-500">✔️</span>
+                            <FontAwesomeIcon
+                              icon={faCheckSquare}
+                              className="text-violet-600 cursor-pointer"
+                              style={{ fontSize: '24px' }}
+                            />
                           ) : (
-                            <button
+                            <FontAwesomeIcon
+                              icon={faSquare}
+                              className="cursor-pointer"
+                              style={{
+                                fontSize: '19px',
+                                color: 'white',
+                                border: '2px solid #8b5cf6',
+                                borderRadius: '4px'
+                              }}
                               onClick={() => handleLogSet(exerciseName, setIndex)}
-                              className="bg-violet-900 text-white px-4 py-2 rounded uppercase"
-                            >
-                              Log Set
-                            </button>
+                            />
                           )}
                         </div>
+
                       </div>
                     ))}
                   </div>
@@ -401,7 +422,6 @@ const CurrentWorkout: React.FC = () => {
               value={notes}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
             ></textarea>
-
           </div>
         </div>
       </main>

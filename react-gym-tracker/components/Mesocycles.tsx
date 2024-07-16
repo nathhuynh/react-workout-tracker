@@ -133,8 +133,8 @@ const Mesocycles: React.FC = () => {
                 <li key={index} className="border-b border-gray-300 flex justify-between items-center py-4">
                   <div>
                     <span className="block text-sm text-gray-600 uppercase">{mesocycle.templateName}</span>
-                    <span className="block font-semibold uppercase">{mesocycle.name}</span>
-                    <span className="block text-sm text-gray-600 uppercase">{mesocycle.days.length} DAYS</span>
+                    <span className="block font-semibold">{mesocycle.name}</span>
+                    <span className="block text-sm text-gray-600">{mesocycle.days.length} DAYS</span>
                   </div>
                   <div className="relative">
                     <button

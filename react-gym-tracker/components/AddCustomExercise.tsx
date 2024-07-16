@@ -103,7 +103,7 @@ const AddCustomExercise: React.FC = () => {
                 <div className="max-w-3xl mx-auto flex justify-between items-center">
                     <h2 className="text-2xl font-semibold text-black mb-4">Custom Exercises</h2>
                     <button
-                        className="px-4 py-2 bg-blue-500 text-white rounded mb-4"
+                        className="px-4 py-2 text-white rounded mb-4 bg-violet-950 uppercase"
                         onClick={() => {
                             setIsFormVisible(!isFormVisible);
                             setSelectedExercise(null);
