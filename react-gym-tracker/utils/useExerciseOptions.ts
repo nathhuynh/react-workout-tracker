@@ -31,12 +31,19 @@ export const useExerciseOptions = (): ExerciseOptions => {
   });
 
   useEffect(() => {
+    const preprocessExercises = (exercises: Exercise[]): Exercise[] => {
+      return exercises.map(exercise => ({
+        ...exercise,
+        primaryMuscles: exercise.primaryMuscles.map(muscle => combineMuscles(capitalize(muscle))),
+      }));
+    };
+
     const fetchOptions = async () => {
       const exercises: Exercise[] = await fetchExercises();
       const customExercises = localStorage.getItem('customExercises');
       const parsedCustomExercises = customExercises ? JSON.parse(customExercises) : [];
-      const allExercises = [...exercises, ...parsedCustomExercises];
-
+      const allExercises = preprocessExercises([...exercises, ...parsedCustomExercises]);
+      localStorage.setItem('preprocessedExercises', JSON.stringify(allExercises));
       const equipmentTypes = Array.from(
         new Set(allExercises.map(ex => capitalize(ex.equipment)).filter(Boolean))
       ).sort();
@@ -46,14 +53,12 @@ export const useExerciseOptions = (): ExerciseOptions => {
 
       allExercises.forEach(exercise => {
         exercise.primaryMuscles.forEach((muscle: string) => {
-          const capitalizedMuscle = capitalize(muscle);
-          const combinedMuscle = combineMuscles(capitalizedMuscle);
-          primaryMusclesSet.add(combinedMuscle);
+          primaryMusclesSet.add(muscle);
 
-          if (!exercisesByMuscle[combinedMuscle]) {
-            exercisesByMuscle[combinedMuscle] = [];
+          if (!exercisesByMuscle[muscle]) {
+            exercisesByMuscle[muscle] = [];
           }
-          exercisesByMuscle[combinedMuscle].push(exercise);
+          exercisesByMuscle[muscle].push(exercise);
         });
       });
 

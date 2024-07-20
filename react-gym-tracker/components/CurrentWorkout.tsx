@@ -7,6 +7,7 @@ import Dropdown from 'react-dropdown';
 import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import { fetchExercises, Exercise } from '../utils/exerciseService';
+import { useExerciseOptions } from '../utils/useExerciseOptions';
 import '../styles/DotDropdownMenu.css';
 import Stopwatch from '../components/Stopwatch';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -26,6 +27,7 @@ const CurrentWorkout: React.FC = () => {
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [workoutExercises, setWorkoutExercises] = useState<ExerciseMap>(new Map());
+  const { equipmentTypes, primaryMuscles, exercisesByMuscle } = useExerciseOptions();
   const [notes, setNotes] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
@@ -42,13 +44,14 @@ const CurrentWorkout: React.FC = () => {
       setDuration(Number(localStorage.getItem('mesocycleDuration') || 4));
     }
   }, []);
-
+  
   useEffect(() => {
-    const loadExercises = async () => {
-      const data: Exercise[] = await fetchExercises();
-      setExercises(data);
-
+    const loadExercises = () => {
       if (typeof window !== 'undefined') {
+        const savedPreprocessedExercises = localStorage.getItem('preprocessedExercises');
+        if (savedPreprocessedExercises) {
+          setExercises(JSON.parse(savedPreprocessedExercises));
+        }
         const savedCustomExercises = localStorage.getItem('customExercises');
         if (savedCustomExercises) {
           setCustomExercises(JSON.parse(savedCustomExercises));
@@ -57,27 +60,35 @@ const CurrentWorkout: React.FC = () => {
     };
     loadExercises();
   }, []);
-
+  
   useEffect(() => {
     if (isMounted) {
-      const savedExercises = localStorage.getItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`);
-      setWorkoutExercises(savedExercises ? new Map(JSON.parse(savedExercises)) : new Map());
+      const savedPreprocessedExercises = localStorage.getItem('preprocessedExercises');
+      if (savedPreprocessedExercises) {
+        setExercises(JSON.parse(savedPreprocessedExercises));
+      }
+      const savedCustomExercises = localStorage.getItem('customExercises');
+      if (savedCustomExercises) {
+        setCustomExercises(JSON.parse(savedCustomExercises));
+      }
+      const savedWorkoutExercises = localStorage.getItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`);
+      setWorkoutExercises(savedWorkoutExercises ? new Map(JSON.parse(savedWorkoutExercises)) : new Map());
       const savedNotes = localStorage.getItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`);
       setNotes(savedNotes || '');
     }
   }, [isMounted, selectedDate]);
-
+  
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(Array.from(workoutExercises.entries())));
     }
   }, [workoutExercises, selectedDate, isMounted]);
-
+  
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`, notes);
     }
-  }, [notes, selectedDate, isMounted]);
+  }, [notes, selectedDate, isMounted]);  
 
   const handleAddSet = (exerciseName: string, type: 'regular' | 'dropset' = 'regular') => {
     setWorkoutExercises(prev => {
@@ -118,7 +129,7 @@ const CurrentWorkout: React.FC = () => {
     setWorkoutExercises(prev => {
       const updated = new Map(prev);
       const sets = updated.get(exerciseName) || [];
-      sets[setIndex].logged = true;
+      sets[setIndex].logged = !sets[setIndex].logged;
       updated.set(exerciseName, sets);
       return updated;
     });
@@ -188,7 +199,7 @@ const CurrentWorkout: React.FC = () => {
 
   const CustomControl = () => {
     return (
-      <div className="w-[40px] justify-center flex items-center cursor-pointer">
+      <div className="w-[40px] justify-center flex items-center cursor-pointer pl-5">
         <i className="fas fa-ellipsis-v"></i>
       </div>
     );
@@ -291,128 +302,152 @@ const CurrentWorkout: React.FC = () => {
             />
           </div>
 
-          {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => (
-            <div key={exerciseIndex} className="mb-6 p-4 bg-white rounded shadow w-full">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold text-black">{exerciseName}</h3>
-                <Dropdown
-                  options={options}
-                  onChange={(option) => handleSelect(exerciseName, option)}
-                  placeholder=""
-                  className="dropdown"
-                  controlClassName="dropdown-control custom-control"
-                  menuClassName="dropdown-menu"
-                  arrowClosed={<CustomControl />}
-                  arrowOpen={<CustomControl />}
-                />
-              </div>
+          {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => {
+            const exercise = exercises.find(ex => ex.name === exerciseName) || customExercises.find(ex => ex.name === exerciseName);
+            if (!exercise) return null;
 
-              {sets && sets.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
-                    <div>Weight (kg)</div>
-                    <div>Reps</div>
-                    <div></div>
-                  </div>
-                  <div className="flex flex-col space-y-2">
-                    {sets.map((set, setIndex) => (
-                      <div key={setIndex} className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center border-t py-2">
-
-                        <div className="flex-1">
-                          <Select
-                            options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
-                            onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'weight', Number(option?.value))}
-                            placeholder="ENTER"
-                            className="w-full text-black"
-                            classNamePrefix="react-select"
-                            value={{ value: set.weight.toString(), label: set.weight.toString() }}
-                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-                            styles={{
-                              control: (provided, state) => ({
-                                ...provided,
-                                height: '40px',
-                                minHeight: '40px',
-                                justifyContent: 'center',
-                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                '&:hover': {
-                                  borderColor: '#4A148C',
-                                },
-                              }),
-                              valueContainer: (provided) => ({
-                                ...provided,
-                                justifyContent: 'center',
-                              }),
-                              singleValue: (provided) => ({
-                                ...provided,
-                                textAlign: 'center',
-                              })
-                            }}
-                          />
-
-                        </div>
-                        <div className="flex-1">
-                          <Select
-                            options={generateRepsOptions(50).map(option => ({ value: option.toString(), label: option.toString() }))}
-                            onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'reps', Number(option?.value))}
-                            placeholder="ENTER"
-                            className="w-full text-black"
-                            classNamePrefix="react-select text-black"
-                            value={{ value: set.reps.toString(), label: set.reps.toString() }}
-                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-                            styles={{
-                              control: (provided, state) => ({
-                                ...provided,
-                                height: '40px',
-                                minHeight: '40px',
-                                justifyContent: 'center',
-                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                '&:hover': {
-                                  borderColor: '#4A148C',
-                                },
-                              }),
-                              valueContainer: (provided) => ({
-                                ...provided,
-                                justifyContent: 'center',
-                              }),
-                              singleValue: (provided) => ({
-                                ...provided,
-                                textAlign: 'center',
-                              })
-                            }}
-                          />
-
-                        </div>
-                        <div className="flex items-center justify-center">
-                          {set.logged ? (
-                            <FontAwesomeIcon
-                              icon={faCheckSquare}
-                              className="text-violet-600 cursor-pointer"
-                              style={{ fontSize: '24px' }}
-                            />
-                          ) : (
-                            <FontAwesomeIcon
-                              icon={faSquare}
-                              className="cursor-pointer"
-                              style={{
-                                fontSize: '19px',
-                                color: 'white',
-                                border: '2px solid #8b5cf6',
-                                borderRadius: '4px'
-                              }}
-                              onClick={() => handleLogSet(exerciseName, setIndex)}
-                            />
-                          )}
-                        </div>
-
-                      </div>
+            return (
+              <div key={exerciseIndex} className="mb-6 p-4 bg-white rounded shadow w-full relative">
+                <div className="flex justify-between items-center">
+                  <span className="bg-violet-100 text-xs text-violet-700 px-2 py-0.5 rounded-tl rounded-br uppercase font-semibold border-2 border-violet-700 flex items-center">
+                    {exercise.primaryMuscles.map(muscle => (
+                      <span key={muscle}>{muscle}</span>
                     ))}
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-gray-500">No sets available.</p>
-              )}
-            </div>
-          ))}
+                    {sets.every(set => set.logged) && (
+                      <FontAwesomeIcon icon={faCheckSquare} className="ml-2 text-violet-700" />
+                    )}
+                  </span>
+                  <Dropdown
+                    options={options}
+                    onChange={(option) => handleSelect(exerciseName, option)}
+                    placeholder=""
+                    className="dropdown"
+                    controlClassName="dropdown-control custom-control"
+                    menuClassName="dropdown-menu"
+                    arrowClosed={<CustomControl />}
+                    arrowOpen={<CustomControl />}
+                  />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-black">{exercise.name}</h3>
+                  <p className="font-medium text-gray-600 uppercase text-xs pb-2">{exercise.equipment}</p>
+                </div>
+
+                {sets && sets.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
+                      <div>Set</div>
+                      <div>Weight (kg)</div>
+                      <div>Reps</div>
+                      <div></div>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      {sets.map((set, setIndex) => {
+                        const displayIndex = sets.filter(s => s.type !== 'dropset').indexOf(set) + 1;
+                        return (
+                          <div key={setIndex} className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center border-t py-2">
+                            <div className="flex-1 text-center font-bold">
+                              {set.type === 'dropset' ? (
+                                <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded">DS</span>
+                              ) : (
+                                displayIndex
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <Select
+                                options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
+                                onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'weight', Number(option?.value))}
+                                placeholder="ENTER"
+                                className="w-full text-black"
+                                classNamePrefix="react-select"
+                                value={{ value: set.weight.toString(), label: set.weight.toString() }}
+                                components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
+                                styles={{
+                                  control: (provided, state) => ({
+                                    ...provided,
+                                    height: '40px',
+                                    minHeight: '40px',
+                                    justifyContent: 'center',
+                                    borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                    '&:hover': {
+                                      borderColor: '#4A148C',
+                                    },
+                                  }),
+                                  valueContainer: (provided) => ({
+                                    ...provided,
+                                    justifyContent: 'center',
+                                  }),
+                                  singleValue: (provided) => ({
+                                    ...provided,
+                                    textAlign: 'center',
+                                  })
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <Select
+                                options={generateRepsOptions(50).map(option => ({ value: option.toString(), label: option.toString() }))}
+                                onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'reps', Number(option?.value))}
+                                placeholder="ENTER"
+                                className="w-full text-black"
+                                classNamePrefix="react-select text-black"
+                                value={{ value: set.reps.toString(), label: set.reps.toString() }}
+                                components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
+                                styles={{
+                                  control: (provided, state) => ({
+                                    ...provided,
+                                    height: '40px',
+                                    minHeight: '40px',
+                                    justifyContent: 'center',
+                                    borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                    '&:hover': {
+                                      borderColor: '#4A148C',
+                                    },
+                                  }),
+                                  valueContainer: (provided) => ({
+                                    ...provided,
+                                    justifyContent: 'center',
+                                  }),
+                                  singleValue: (provided) => ({
+                                    ...provided,
+                                    textAlign: 'center',
+                                  })
+                                }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-center">
+                              {set.logged ? (
+                                <FontAwesomeIcon
+                                  icon={faCheckSquare}
+                                  className="text-violet-600 cursor-pointer"
+                                  style={{ fontSize: '24px' }}
+                                  onClick={() => handleLogSet(exerciseName, setIndex)}
+                                />
+                              ) : (
+                                <FontAwesomeIcon
+                                  icon={faSquare}
+                                  className="cursor-pointer"
+                                  style={{
+                                    fontSize: '19px',
+                                    color: 'white',
+                                    border: '2px solid #8b5cf6',
+                                    borderRadius: '4px'
+                                  }}
+                                  onClick={() => handleLogSet(exerciseName, setIndex)}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500">No sets available.</p>
+                )}
+              </div>
+            );
+          })}
 
           <div className="mt-4">
             <label className="block mb-2 text-lg text-black">Notes</label>
