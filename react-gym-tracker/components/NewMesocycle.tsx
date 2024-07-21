@@ -3,8 +3,9 @@ import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FaTrash, FaPen, FaCopy } from 'react-icons/fa';
+import { FaTrash, FaPen, FaCopy, FaEllipsisV } from 'react-icons/fa';
 import { useExerciseOptions } from '../utils/useExerciseOptions';
+import Dropdown from 'react-dropdown';
 
 interface Exercise {
     name: string;
@@ -32,6 +33,12 @@ const dayOptions = [
     { label: 'Sunday', value: 'Sunday' },
 ];
 
+const dropdownOptions = [
+    { value: 'addDay', label: 'Add Day' },
+    { value: 'selectTemplate', label: 'Select Template' },
+    { value: 'resetTemplate', label: 'Reset Template' },
+];
+
 const NewMesocycle: React.FC = () => {
     const { exercisesByMuscle } = useExerciseOptions();
     const [templates, setTemplates] = useState<{ label: string, value: string, days: Day[] }[]>([]);
@@ -44,6 +51,18 @@ const NewMesocycle: React.FC = () => {
     const [mesocycleName, setMesocycleName] = useState('New Mesocycle');
     const [isEditingName, setIsEditingName] = useState(false);
     const [templateName, setTemplateName] = useState('');
+    const [showDropdownModal, setShowDropdownModal] = useState(false);
+    const [dropdownModalContent, setDropdownModalContent] = useState<string | null>(null);
+    const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
+    const [tempSelectedTemplate, setTempSelectedTemplate] = useState<{ label: string, value: string, days: Day[] } | null>(null);
+
+    const CustomControl = () => {
+        return (
+            <div className="w-[40px] justify-center flex items-center cursor-pointer pl-5">
+                <i className="fas fa-ellipsis-v"></i>
+            </div>
+        );
+    };
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -85,9 +104,16 @@ const NewMesocycle: React.FC = () => {
 
     const handleTemplateChange = (option: SingleValue<{ label: string, value: string, days: Day[] }>) => {
         if (option) {
-            setSelectedTemplate(option);
-            setTemplateName(option.label);
-            setDays(option.days);
+            setTempSelectedTemplate(option);
+        }
+    };
+
+    const handleConfirmTemplate = () => {
+        if (tempSelectedTemplate) {
+            setSelectedTemplate(tempSelectedTemplate);
+            setTemplateName(tempSelectedTemplate.label);
+            setDays(tempSelectedTemplate.days);
+            setShowDropdownModal(false);
         }
     };
 
@@ -277,10 +303,39 @@ const NewMesocycle: React.FC = () => {
         }
     };
 
+    const resetTemplate = () => {
+        const newDays = days.map(day => ({
+            ...day,
+            exercises: day.exercises.map(exercise => ({ ...exercise, exercise: null }))
+        }));
+        setDays(newDays);
+        setSelectedTemplate(null);
+        setTemplateName('');
+        setDropdownModalContent(null);
+    };    
+    
+    const handleDropdownSelect = (option: any) => {
+        setDropdownVisible(null);
+        switch (option?.value) {
+            case 'addDay':
+                handleAddDay();
+                break;
+            case 'selectTemplate':
+                setDropdownModalContent('selectTemplate');
+                setShowDropdownModal(true);
+                break;
+            case 'resetTemplate':
+                resetTemplate()
+                break;
+            default:
+                break;
+        }
+    };
+
     return (
         <div className="min-h-screen flex flex-col p-6 bg-gray-100">
             <header className="flex justify-between items-center mb-4">
-                <div className="flex items-center">
+                <div className="flex items-center space-x-2">
                     {isEditingName ? (
                         <input
                             type="text"
@@ -305,32 +360,27 @@ const NewMesocycle: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="grid gap-1">
+                <div className="flex items-center space-x-2">
                     <button
-                        className="bg-violet-950 text-white px-4 py-2 rounded uppercase"
+                        className="bg-gray-300 text-black px-4 py-2 rounded uppercase"
                         onClick={handleCreateMesocycle}
                     >
                         Create Mesocycle
                     </button>
-                    <button
-                        className="bg-violet-950 text-white px-4 py-2 rounded uppercase"
-                        onClick={handleAddDay}
-                    >
-                        + Add Day
-                    </button>
+                    <Dropdown
+                        options={dropdownOptions}
+                        onChange={(option) => handleDropdownSelect(option)}
+                        placeholder=""
+                        className="dropdown"
+                        controlClassName="dropdown-control custom-control"
+                        menuClassName="dropdown-menu"
+                        arrowClosed={<CustomControl />}
+                        arrowOpen={<CustomControl />}
+                    />
+
+
                 </div>
             </header>
-
-            <div className="mb-4">
-                <Select
-                    options={templates}
-                    onChange={handleTemplateChange}
-                    placeholder="Choose a template"
-                    className="text-black"
-                    classNamePrefix="react-select"
-                    value={selectedTemplate}
-                />
-            </div>
 
             <DragDropContext onDragEnd={onDragEnd}>
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 auto-cols-fr">
@@ -449,6 +499,36 @@ const NewMesocycle: React.FC = () => {
                         >
                             Cancel
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {showDropdownModal && dropdownModalContent === 'selectTemplate' && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded shadow-md w-1/3">
+                        <h3 className="text-xl mb-4">Select Template</h3>
+                        <Select
+                            options={templates}
+                            onChange={handleTemplateChange}
+                            placeholder="Choose a template"
+                            className="text-black"
+                            classNamePrefix="react-select"
+                            value={tempSelectedTemplate}
+                        />
+                        <div className="flex justify-between mt-4">
+                            <button
+                                className="bg-red-500 text-white px-4 py-2 rounded uppercase"
+                                onClick={() => setShowDropdownModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-gray-300 text-white px-4 py-2 rounded uppercase"
+                                onClick={handleConfirmTemplate}
+                            >
+                                Confirm
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

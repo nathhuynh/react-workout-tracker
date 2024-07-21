@@ -103,7 +103,7 @@ const AddCustomExercise: React.FC = () => {
                 <div className="max-w-3xl mx-auto flex justify-between items-center">
                     <h2 className="text-2xl font-semibold text-black mb-4">Custom Exercises</h2>
                     <button
-                        className="px-4 py-2 text-white rounded mb-4 bg-violet-950 uppercase"
+                        className="px-3 rounded mb-4 bg-gray-300 uppercase text-black text-lg" 
                         onClick={() => {
                             setIsFormVisible(!isFormVisible);
                             setSelectedExercise(null);
@@ -113,10 +113,9 @@ const AddCustomExercise: React.FC = () => {
                             setCategory(null);
                         }}
                     >
-                        {isFormVisible && !selectedExercise ? 'Cancel' : '+ NEW'}
+                        + {isFormVisible && !selectedExercise}
                     </button>
                 </div>
-
 
                 <div className="max-w-3xl mx-auto bg-white p-4 pt-0 rounded shadow-md">
                     <ul>

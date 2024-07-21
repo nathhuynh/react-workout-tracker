@@ -3,6 +3,7 @@
 import React, { useState, useEffect, ChangeEvent } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import '../styles/globals.css';
 import Dropdown from 'react-dropdown';
 import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
@@ -11,7 +12,7 @@ import { useExerciseOptions } from '../utils/useExerciseOptions';
 import '../styles/DotDropdownMenu.css';
 import Stopwatch from '../components/Stopwatch';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStopwatch, faSquare, faCheckSquare } from '@fortawesome/free-solid-svg-icons';
+import { faStopwatch, faSquare, faCheckSquare, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 interface Set {
   weight: number;
@@ -44,7 +45,7 @@ const CurrentWorkout: React.FC = () => {
       setDuration(Number(localStorage.getItem('mesocycleDuration') || 4));
     }
   }, []);
-  
+
   useEffect(() => {
     const loadExercises = () => {
       if (typeof window !== 'undefined') {
@@ -60,7 +61,7 @@ const CurrentWorkout: React.FC = () => {
     };
     loadExercises();
   }, []);
-  
+
   useEffect(() => {
     if (isMounted) {
       const savedPreprocessedExercises = localStorage.getItem('preprocessedExercises');
@@ -77,18 +78,18 @@ const CurrentWorkout: React.FC = () => {
       setNotes(savedNotes || '');
     }
   }, [isMounted, selectedDate]);
-  
+
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(Array.from(workoutExercises.entries())));
     }
   }, [workoutExercises, selectedDate, isMounted]);
-  
+
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`, notes);
     }
-  }, [notes, selectedDate, isMounted]);  
+  }, [notes, selectedDate, isMounted]);
 
   const handleAddSet = (exerciseName: string, type: 'regular' | 'dropset' = 'regular') => {
     setWorkoutExercises(prev => {
@@ -246,42 +247,45 @@ const CurrentWorkout: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 pt-10 bg-gray-100 w-full">
         <div className="w-full lg:px-96">
+          <h2 className="text-2xl text-black">
+            {/* TODO: Add Mesocycle name */}
+            Day {day} Week {week}
+          </h2>
           <header className="flex justify-between items-center mb-4">
-            <div>
+            <div className="flex items-center">
               <h2 className="text-2xl font-semibold text-black">
                 {selectedDate.toDateString()}
               </h2>
-              <h2 className="text-2xl text-black">
-                Day {day} Week {week}
-              </h2>
             </div>
-            <button
-              className="bg-violet-950 text-white px-4 py-2 rounded"
-              onClick={() => setIsCalendarVisible(!isCalendarVisible)}
-            >
-              {isCalendarVisible ? 'Hide Calendar' : 'Show Calendar'}
-            </button>
+            <div className="flex items-center space-x-4 text-base">
+              {Array.from(workoutExercises.values()).every(sets => sets.every(set => set.logged)) && (
+                <FontAwesomeIcon icon={faCheckSquare} className="text-violet-700" />
+              )}
+              <button
+                className="text-violet-950 flex items-center"
+                onClick={() => setIsCalendarVisible(!isCalendarVisible)}
+              >
+                <FontAwesomeIcon icon={faCalendarAlt} />
+              </button>
+              <button
+                onClick={() => setIsStopwatchVisible(!isStopwatchVisible)}
+                className="text-violet-950 flex items-center"
+              >
+                <FontAwesomeIcon icon={faStopwatch} />
+              </button>
+            </div>
           </header>
 
           {isCalendarVisible && (
             <div className="mb-4 flex justify-center">
               <Calendar
+                className="react-calendar"
                 onChange={handleDateChange}
                 value={selectedDate}
               />
             </div>
           )}
 
-          {/* Stopwatch */}
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => setIsStopwatchVisible(!isStopwatchVisible)}
-              className="bg-violet-950 text-white px-4 py-2 rounded flex items-center"
-            >
-              <FontAwesomeIcon icon={faStopwatch} className="mr-2" />
-              {isStopwatchVisible ? 'Hide Stopwatch' : 'Show Stopwatch'}
-            </button>
-          </div>
           {isStopwatchVisible && (
             <div className="mb-4">
               <Stopwatch />
