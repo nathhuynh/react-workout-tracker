@@ -13,6 +13,7 @@ import '../styles/DotDropdownMenu.css';
 import Stopwatch from '../components/Stopwatch';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStopwatch, faSquare, faCheckSquare, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import LastStatsModal from '../components/LastStatsModal';
 
 interface Set {
   weight: number;
@@ -36,6 +37,9 @@ const CurrentWorkout: React.FC = () => {
   const [mesocycleStartDate, setMesocycleStartDate] = useState(new Date());
   const [duration, setDuration] = useState(4);
   const [isStopwatchVisible, setIsStopwatchVisible] = useState(false);
+  const [isLastStatsModalOpen, setIsLastStatsModalOpen] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState<string>('');
+  const [lastStats, setLastStats] = useState<{ date: string, sets: Set[] } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -174,6 +178,7 @@ const CurrentWorkout: React.FC = () => {
     { value: 'addDropset', label: 'Add Dropset' },
     { value: 'removeSet', label: 'Remove Set' },
     { value: 'removeExercise', label: 'Remove Exercise' },
+    { value: 'seeLastStats', label: 'Last Session' },
   ];
 
   const [dropdownValue, setDropdownValue] = useState<string | undefined>(undefined);
@@ -191,6 +196,12 @@ const CurrentWorkout: React.FC = () => {
         break;
       case 'removeExercise':
         handleRemoveExercise(exerciseName);
+        break;
+      case 'seeLastStats':
+        setCurrentExercise(exerciseName);
+        const stats = findLastSessionStats(exerciseName);
+        setLastStats(stats);
+        setIsLastStatsModalOpen(true);
         break;
       default:
         break;
@@ -242,6 +253,29 @@ const CurrentWorkout: React.FC = () => {
   };
 
   const { week, day } = calculateDayAndWeek(selectedDate, mesocycleStartDate, duration);
+
+  const findLastSessionStats = (exerciseName: string): { date: string, sets: Set[] } | null => {
+    const currentDate = new Date(selectedDate);
+    currentDate.setDate(currentDate.getDate() - 1);
+
+    for (let i = 0; i < 365; i++) {
+      const dateKey = currentDate.toISOString().split('T')[0];
+      const savedExercises = localStorage.getItem(`workoutExercises_${dateKey}`);
+
+      if (savedExercises) {
+        const exercises = new Map(JSON.parse(savedExercises) as [string, Set[]][]);
+        if (exercises.has(exerciseName)) {
+          const sets = exercises.get(exerciseName);
+          if (sets) {
+            return { date: dateKey, sets: sets as Set[] };
+          }
+        }
+      }
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+
+    return null;
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -462,6 +496,13 @@ const CurrentWorkout: React.FC = () => {
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
             ></textarea>
           </div>
+
+          <LastStatsModal
+            isOpen={isLastStatsModalOpen}
+            onClose={() => setIsLastStatsModalOpen(false)}
+            exerciseName={currentExercise}
+            lastStats={lastStats}
+          />
         </div>
       </main>
     </div>
