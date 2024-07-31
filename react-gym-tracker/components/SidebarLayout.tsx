@@ -6,12 +6,15 @@ interface SidebarLayoutProps {
 }
 
 const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   return (
-    <div className="flex">
-      <Sidebar isSidebarCollapsed={isSidebarCollapsed} setIsSidebarCollapsed={setIsSidebarCollapsed} />
-      <main className="flex-1 p-6 bg-gray-100 transition-all duration-300">
+    <div className="relative">
+      <Sidebar
+        isSidebarCollapsed={isSidebarCollapsed}
+        setIsSidebarCollapsed={setIsSidebarCollapsed}
+      />
+      <main>
         {children}
       </main>
     </div>

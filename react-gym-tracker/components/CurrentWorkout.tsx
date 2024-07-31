@@ -14,6 +14,7 @@ import Stopwatch from '../components/Stopwatch';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStopwatch, faSquare, faCheckSquare, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import LastStatsModal from '../components/LastStatsModal';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 interface Set {
   weight: number;
@@ -27,7 +28,7 @@ type ExerciseMap = Map<string, Set[]>;
 const CurrentWorkout: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())));
   const [workoutExercises, setWorkoutExercises] = useState<ExerciseMap>(new Map());
   const { equipmentTypes, primaryMuscles, exercisesByMuscle } = useExerciseOptions();
   const [notes, setNotes] = useState('');
@@ -40,6 +41,16 @@ const CurrentWorkout: React.FC = () => {
   const [isLastStatsModalOpen, setIsLastStatsModalOpen] = useState(false);
   const [currentExercise, setCurrentExercise] = useState<string>('');
   const [lastStats, setLastStats] = useState<{ date: string, sets: Set[] } | null>(null);
+  const [workoutExerciseOrder, setWorkoutExerciseOrder] = useState<string[]>(Array.from(workoutExercises.keys()));
+
+  // useEffect(() => {
+  //   console.log('Workout Exercises:', Array.from(workoutExercises.entries()));
+  //   console.log('Workout keys:', Array.from(workoutExercises.keys()));
+  // }, [workoutExercises]);
+
+  // useEffect(() => {
+  //   console.log('Workout Exercise Order:', workoutExerciseOrder);
+  // }, [workoutExerciseOrder]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -68,32 +79,33 @@ const CurrentWorkout: React.FC = () => {
 
   useEffect(() => {
     if (isMounted) {
-      const savedPreprocessedExercises = localStorage.getItem('preprocessedExercises');
-      if (savedPreprocessedExercises) {
-        setExercises(JSON.parse(savedPreprocessedExercises));
+      const dateKey = selectedDate.toISOString().split('T')[0];
+      const savedWorkoutExercises = localStorage.getItem(`workoutExercises_${dateKey}`);
+      const savedWorkoutExerciseOrder = localStorage.getItem(`workoutExerciseOrder_${dateKey}`);
+      if (savedWorkoutExercises) {
+        const parsedExercises: ExerciseMap = new Map<string, Set[]>(JSON.parse(savedWorkoutExercises));
+        setWorkoutExercises(parsedExercises);
+        if (savedWorkoutExerciseOrder) {
+          const parsedOrder: string[] = JSON.parse(savedWorkoutExerciseOrder);
+          setWorkoutExerciseOrder(parsedOrder);
+        } else {
+          setWorkoutExerciseOrder(Array.from(parsedExercises.keys()));
+        }
+      } else {
+        setWorkoutExercises(new Map());
+        setWorkoutExerciseOrder([]);
       }
-      const savedCustomExercises = localStorage.getItem('customExercises');
-      if (savedCustomExercises) {
-        setCustomExercises(JSON.parse(savedCustomExercises));
-      }
-      const savedWorkoutExercises = localStorage.getItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`);
-      setWorkoutExercises(savedWorkoutExercises ? new Map(JSON.parse(savedWorkoutExercises)) : new Map());
-      const savedNotes = localStorage.getItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`);
+      const savedNotes = localStorage.getItem(`workoutNotes_${dateKey}`);
       setNotes(savedNotes || '');
     }
-  }, [isMounted, selectedDate]);
+  }, [isMounted, selectedDate]);  
 
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem(`workoutExercises_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(Array.from(workoutExercises.entries())));
+      localStorage.setItem(`workoutExerciseOrder_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(workoutExerciseOrder));
     }
-  }, [workoutExercises, selectedDate, isMounted]);
-
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem(`workoutNotes_${selectedDate.toISOString().split('T')[0]}`, notes);
-    }
-  }, [notes, selectedDate, isMounted]);
+  }, [workoutExercises, workoutExerciseOrder, selectedDate, isMounted]);
 
   const handleAddSet = (exerciseName: string, type: 'regular' | 'dropset' = 'regular') => {
     setWorkoutExercises(prev => {
@@ -145,10 +157,15 @@ const CurrentWorkout: React.FC = () => {
       const updated = new Map(prev);
       if (!updated.has(exerciseName)) {
         updated.set(exerciseName, [{ weight: 0, reps: 0, logged: false }]);
+        setWorkoutExerciseOrder(prevOrder => {
+          const newOrder = [...prevOrder, exerciseName];
+          localStorage.setItem(`workoutExerciseOrder_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(newOrder));
+          return newOrder;
+        });
       }
       return updated;
     });
-  };
+  };  
 
   const handleRemoveExercise = (exerciseName: string) => {
     setWorkoutExercises(prev => {
@@ -156,6 +173,7 @@ const CurrentWorkout: React.FC = () => {
       updated.delete(exerciseName);
       return updated;
     });
+    setWorkoutExerciseOrder(prev => prev.filter(name => name !== exerciseName));
   };
 
   const generateWeightOptions = () => {
@@ -224,17 +242,34 @@ const CurrentWorkout: React.FC = () => {
     if (!value || Array.isArray(value)) return;
     const normalisedDate = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
     setSelectedDate(normalisedDate);
-
+  
     if (isMounted) {
       const dateKey = normalisedDate.toISOString().split('T')[0];
       const savedExercises = localStorage.getItem(`workoutExercises_${dateKey}`);
-      setWorkoutExercises(savedExercises ? new Map(JSON.parse(savedExercises)) : new Map());
+      const savedWorkoutExerciseOrder = localStorage.getItem(`workoutExerciseOrder_${dateKey}`);
+      const parsedExercises: ExerciseMap = savedExercises ? new Map<string, Set[]>(JSON.parse(savedExercises)) : new Map();
+      
+      if (savedWorkoutExerciseOrder) {
+        const parsedOrder: string[] = JSON.parse(savedWorkoutExerciseOrder);
+        if (parsedOrder.length > 0) {
+          setWorkoutExerciseOrder(parsedOrder);
+        } else {
+          const keys = Array.from(parsedExercises.keys());
+          setWorkoutExerciseOrder(keys);
+          localStorage.setItem(`workoutExerciseOrder_${dateKey}`, JSON.stringify(keys));
+        }
+      } else {
+        const keys = Array.from(parsedExercises.keys());
+        setWorkoutExerciseOrder(keys);
+        localStorage.setItem(`workoutExerciseOrder_${dateKey}`, JSON.stringify(keys));
+      }
+  
       const savedNotes = localStorage.getItem(`workoutNotes_${dateKey}`);
       setNotes(savedNotes || '');
     }
-
+  
     setIsCalendarVisible(false);
-  };
+  };  
 
   const calculateDayAndWeek = (selectedDate: Date, startDate: Date, duration: number) => {
     const start = new Date(startDate);
@@ -277,10 +312,23 @@ const CurrentWorkout: React.FC = () => {
     return null;
   };
 
+  const onDragEnd = (result: any) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const items = Array.from(workoutExerciseOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setWorkoutExerciseOrder(items);
+    localStorage.setItem(`workoutExerciseOrder_${selectedDate.toISOString().split('T')[0]}`, JSON.stringify(items));
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 pt-10 bg-gray-100 w-full">
-        <div className="w-full lg:px-96">
+        <div className="p-4 w-full lg:px-96">
           <h2 className="text-2xl text-black">
             {/* TODO: Add Mesocycle name */}
             Day {day} Week {week}
@@ -340,152 +388,171 @@ const CurrentWorkout: React.FC = () => {
             />
           </div>
 
-          {Array.from(workoutExercises.entries()).map(([exerciseName, sets], exerciseIndex) => {
-            const exercise = exercises.find(ex => ex.name === exerciseName) || customExercises.find(ex => ex.name === exerciseName);
-            if (!exercise) return null;
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="exercises">
+              {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef}>
+                  {workoutExerciseOrder.map((exerciseName, index) => {
+                    const sets = workoutExercises.get(exerciseName);
+                    const exercise = exercises.find(ex => ex.name === exerciseName) || customExercises.find(ex => ex.name === exerciseName);
+                    if (!exercise || !sets) return null;
 
-            return (
-              <div key={exerciseIndex} className="mb-6 p-4 bg-white rounded shadow w-full relative">
-                <div className="flex justify-between items-center">
-                  <span className="bg-violet-100 text-xs text-violet-700 px-2 py-0.5 rounded-tl rounded-br uppercase font-semibold border-2 border-violet-700 flex items-center">
-                    {exercise.primaryMuscles.map(muscle => (
-                      <span key={muscle}>{muscle}</span>
-                    ))}
-                    {sets.every(set => set.logged) && (
-                      <FontAwesomeIcon icon={faCheckSquare} className="ml-2 text-violet-700" />
-                    )}
-                  </span>
-                  <Dropdown
-                    options={options}
-                    onChange={(option) => handleSelect(exerciseName, option)}
-                    placeholder=""
-                    className="dropdown"
-                    controlClassName="dropdown-control custom-control"
-                    menuClassName="dropdown-menu"
-                    arrowClosed={<CustomControl />}
-                    arrowOpen={<CustomControl />}
-                  />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-black">{exercise.name}</h3>
-                  <p className="font-medium text-gray-600 uppercase text-xs pb-2">{exercise.equipment}</p>
-                </div>
-
-                {sets && sets.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
-                      <div>Set</div>
-                      <div>Weight (kg)</div>
-                      <div>Reps</div>
-                      <div></div>
-                    </div>
-                    <div className="flex flex-col space-y-2">
-                      {sets.map((set, setIndex) => {
-                        const displayIndex = sets.filter(s => s.type !== 'dropset').indexOf(set) + 1;
-                        return (
-                          <div key={setIndex} className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center border-t py-2">
-                            <div className="flex-1 text-center font-bold">
-                              {set.type === 'dropset' ? (
-                                <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded">DS</span>
-                              ) : (
-                                displayIndex
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <Select
-                                options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
-                                onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'weight', Number(option?.value))}
-                                placeholder="ENTER"
-                                className="w-full text-black"
-                                classNamePrefix="react-select"
-                                value={{ value: set.weight.toString(), label: set.weight.toString() }}
-                                components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-                                styles={{
-                                  control: (provided, state) => ({
-                                    ...provided,
-                                    height: '40px',
-                                    minHeight: '40px',
-                                    justifyContent: 'center',
-                                    borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                    '&:hover': {
-                                      borderColor: '#4A148C',
-                                    },
-                                  }),
-                                  valueContainer: (provided) => ({
-                                    ...provided,
-                                    justifyContent: 'center',
-                                  }),
-                                  singleValue: (provided) => ({
-                                    ...provided,
-                                    textAlign: 'center',
-                                  })
-                                }}
+                    return (
+                      <Draggable key={exerciseName} draggableId={exerciseName} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="mb-6 p-4 bg-white rounded shadow w-full relative"
+                          >
+                            <div className="flex justify-between items-center">
+                              <span className="bg-violet-100 text-xs text-violet-700 px-2 py-0.5 rounded-tl rounded-br uppercase font-semibold border-2 border-violet-700 flex items-center">
+                                {exercise.primaryMuscles.map(muscle => (
+                                  <span key={muscle}>{muscle}</span>
+                                ))}
+                                {sets.every(set => set.logged) && (
+                                  <FontAwesomeIcon icon={faCheckSquare} className="ml-2 text-violet-700" />
+                                )}
+                              </span>
+                              <Dropdown
+                                options={options}
+                                onChange={(option) => handleSelect(exerciseName, option)}
+                                placeholder=""
+                                className="dropdown"
+                                controlClassName="dropdown-control custom-control"
+                                menuClassName="dropdown-menu"
+                                arrowClosed={<CustomControl />}
+                                arrowOpen={<CustomControl />}
                               />
                             </div>
-                            <div className="flex-1">
-                              <Select
-                                options={generateRepsOptions(50).map(option => ({ value: option.toString(), label: option.toString() }))}
-                                onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'reps', Number(option?.value))}
-                                placeholder="ENTER"
-                                className="w-full text-black"
-                                classNamePrefix="react-select text-black"
-                                value={{ value: set.reps.toString(), label: set.reps.toString() }}
-                                components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-                                styles={{
-                                  control: (provided, state) => ({
-                                    ...provided,
-                                    height: '40px',
-                                    minHeight: '40px',
-                                    justifyContent: 'center',
-                                    borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                    '&:hover': {
-                                      borderColor: '#4A148C',
-                                    },
-                                  }),
-                                  valueContainer: (provided) => ({
-                                    ...provided,
-                                    justifyContent: 'center',
-                                  }),
-                                  singleValue: (provided) => ({
-                                    ...provided,
-                                    textAlign: 'center',
-                                  })
-                                }}
-                              />
+                            <div>
+                              <h3 className="text-lg font-semibold text-black">{exercise.name}</h3>
+                              <p className="font-medium text-gray-600 uppercase text-xs pb-2">{exercise.equipment}</p>
                             </div>
-                            <div className="flex items-center justify-center">
-                              {set.logged ? (
-                                <FontAwesomeIcon
-                                  icon={faCheckSquare}
-                                  className="text-violet-600 cursor-pointer"
-                                  style={{ fontSize: '24px' }}
-                                  onClick={() => handleLogSet(exerciseName, setIndex)}
-                                />
-                              ) : (
-                                <FontAwesomeIcon
-                                  icon={faSquare}
-                                  className="cursor-pointer"
-                                  style={{
-                                    fontSize: '19px',
-                                    color: 'white',
-                                    border: '2px solid #8b5cf6',
-                                    borderRadius: '4px'
-                                  }}
-                                  onClick={() => handleLogSet(exerciseName, setIndex)}
-                                />
-                              )}
-                            </div>
+
+                            {sets && sets.length > 0 ? (
+                              <>
+                                <div className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
+                                  <div>Set</div>
+                                  <div>Weight (kg)</div>
+                                  <div>Reps</div>
+                                  <div></div>
+                                </div>
+                                <div className="flex flex-col space-y-2">
+                                  {sets.map((set, setIndex) => {
+                                    const displayIndex = sets.filter(s => s.type !== 'dropset').indexOf(set) + 1;
+                                    return (
+                                      <div key={setIndex} className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center border-t py-2">
+                                        <div className="flex-1 text-center font-bold">
+                                          {set.type === 'dropset' ? (
+                                            <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded">DS</span>
+                                          ) : (
+                                            displayIndex
+                                          )}
+                                        </div>
+                                        <div className="flex-1">
+                                          <Select
+                                            options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
+                                            onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'weight', Number(option?.value))}
+                                            placeholder="ENTER"
+                                            className="w-full text-black"
+                                            classNamePrefix="react-select"
+                                            value={{ value: set.weight.toString(), label: set.weight.toString() }}
+                                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
+                                            styles={{
+                                              control: (provided, state) => ({
+                                                ...provided,
+                                                height: '40px',
+                                                minHeight: '40px',
+                                                justifyContent: 'center',
+                                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                                '&:hover': {
+                                                  borderColor: '#4A148C',
+                                                },
+                                              }),
+                                              valueContainer: (provided) => ({
+                                                ...provided,
+                                                justifyContent: 'center',
+                                              }),
+                                              singleValue: (provided) => ({
+                                                ...provided,
+                                                textAlign: 'center',
+                                              })
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex-1">
+                                          <Select
+                                            options={generateRepsOptions(50).map(option => ({ value: option.toString(), label: option.toString() }))}
+                                            onChange={(option: SingleValue<{ value: string; label: string }>) => handleInputChange(exerciseName, setIndex, 'reps', Number(option?.value))}
+                                            placeholder="ENTER"
+                                            className="w-full text-black"
+                                            classNamePrefix="react-select text-black"
+                                            value={{ value: set.reps.toString(), label: set.reps.toString() }}
+                                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
+                                            styles={{
+                                              control: (provided, state) => ({
+                                                ...provided,
+                                                height: '40px',
+                                                minHeight: '40px',
+                                                justifyContent: 'center',
+                                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                                '&:hover': {
+                                                  borderColor: '#4A148C',
+                                                },
+                                              }),
+                                              valueContainer: (provided) => ({
+                                                ...provided,
+                                                justifyContent: 'center',
+                                              }),
+                                              singleValue: (provided) => ({
+                                                ...provided,
+                                                textAlign: 'center',
+                                              })
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex items-center justify-center">
+                                          {set.logged ? (
+                                            <FontAwesomeIcon
+                                              icon={faCheckSquare}
+                                              className="text-violet-600 cursor-pointer"
+                                              style={{ fontSize: '24px' }}
+                                              onClick={() => handleLogSet(exerciseName, setIndex)}
+                                            />
+                                          ) : (
+                                            <FontAwesomeIcon
+                                              icon={faSquare}
+                                              className="cursor-pointer"
+                                              style={{
+                                                fontSize: '19px',
+                                                color: 'white',
+                                                border: '2px solid #8b5cf6',
+                                                borderRadius: '4px'
+                                              }}
+                                              onClick={() => handleLogSet(exerciseName, setIndex)}
+                                            />
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </>
+                            ) : (
+                              <p className="text-sm text-gray-500">No sets available.</p>
+                            )}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-sm text-gray-500">No sets available.</p>
-                )}
-              </div>
-            );
-          })}
+                        )}
+                      </Draggable>
+                    );
+                  })}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
 
           <div className="mt-4">
             <label className="block mb-2 text-lg text-black">Notes</label>

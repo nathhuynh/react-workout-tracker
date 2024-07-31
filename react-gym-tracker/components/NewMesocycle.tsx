@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
@@ -6,6 +7,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FaTrash, FaPen, FaCopy, FaEllipsisV } from 'react-icons/fa';
 import { useExerciseOptions } from '../utils/useExerciseOptions';
 import Dropdown from 'react-dropdown';
+import '../styles/globals.css'
 
 interface Exercise {
     name: string;
@@ -55,6 +57,7 @@ const NewMesocycle: React.FC = () => {
     const [dropdownModalContent, setDropdownModalContent] = useState<string | null>(null);
     const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
     const [tempSelectedTemplate, setTempSelectedTemplate] = useState<{ label: string, value: string, days: Day[] } | null>(null);
+    const router = useRouter();
 
     const CustomControl = () => {
         return (
@@ -183,6 +186,7 @@ const NewMesocycle: React.FC = () => {
         localStorage.setItem('mesocycles', JSON.stringify(mesocycles));
         alert('Mesocycle created and saved!');
         console.log("Mesocycle: ", mesocycle)
+        router.push('/mesocycles');
     };
 
     const handleCopyExercises = (sourceDayIndex: number, destinationDayIndex: number) => {
@@ -312,8 +316,8 @@ const NewMesocycle: React.FC = () => {
         setSelectedTemplate(null);
         setTemplateName('');
         setDropdownModalContent(null);
-    };    
-    
+    };
+
     const handleDropdownSelect = (option: any) => {
         setDropdownVisible(null);
         switch (option?.value) {
@@ -334,7 +338,7 @@ const NewMesocycle: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col p-6 bg-gray-100">
-            <header className="flex justify-between items-center mb-4">
+            <header className="flex justify-between items-center mb-4 pt-8">
                 <div className="flex items-center space-x-2">
                     {isEditingName ? (
                         <input
@@ -360,13 +364,7 @@ const NewMesocycle: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="flex items-center space-x-2">
-                    <button
-                        className="bg-gray-300 text-black px-4 py-2 rounded uppercase"
-                        onClick={handleCreateMesocycle}
-                    >
-                        Create Mesocycle
-                    </button>
+                <div className="flex items-center">
                     <Dropdown
                         options={dropdownOptions}
                         onChange={(option) => handleDropdownSelect(option)}
@@ -377,8 +375,6 @@ const NewMesocycle: React.FC = () => {
                         arrowClosed={<CustomControl />}
                         arrowOpen={<CustomControl />}
                     />
-
-
                 </div>
             </header>
 
@@ -532,7 +528,15 @@ const NewMesocycle: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
+            <div className="flex justify-end p-6 pr-0">
+                <button
+                    className="bg-gray-300 text-black uppercase font-bold px-4 py-2"
+                    onClick={handleCreateMesocycle}
+                >
+                    Create
+                </button>
+            </div>
+        </div >
     );
 };
 
