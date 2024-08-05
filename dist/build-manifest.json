@@ -22,6 +22,11 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
+    "/addcustomexercise": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/addcustomexercise.js"
+    ],
     "/mesocycles": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -31,6 +36,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/new-mesocycle.js"
+    ],
+    "/workout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/workout.js"
     ]
   },
   "ampFirstPages": []

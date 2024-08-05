@@ -338,7 +338,7 @@ const NewMesocycle: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col p-6 bg-gray-100">
-            <header className="flex justify-between items-center mb-4 pt-8">
+            <header className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
                     {isEditingName ? (
                         <input

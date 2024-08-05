@@ -327,7 +327,7 @@ const CurrentWorkout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <main className="flex-1 pt-10 bg-gray-100 w-full">
+      <main className="flex-1 bg-gray-100 w-full">
         <div className="p-4 w-full lg:px-96">
           <h2 className="text-2xl text-black">
             {/* TODO: Add Mesocycle name */}

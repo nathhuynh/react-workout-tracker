@@ -2,7 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/mesocycles": "pages/mesocycles.js",
+  "/workout": "pages/workout.js",
   "/new-mesocycle": "pages/new-mesocycle.js",
-  "/workout": "pages/workout.js"
+  "/mesocycles": "pages/mesocycles.js",
+  "/addcustomexercise": "pages/addcustomexercise.js"
 }

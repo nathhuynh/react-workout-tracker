@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 interface SidebarProps {
@@ -14,7 +13,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
   const handleLinkClick = (href: string) => {
     setIsSidebarCollapsed(true);
     router.push(href);
-  }
+  };
 
   return (
     <>
@@ -34,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
         <aside className="flex flex-col h-full">
           <div className="px-4 py-2 bg-gray-800 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-right">RP</h1>
+              <h1 className="text-2xl font-bold text-right pb-2">RP</h1>
               <span className="text-sm">Hypertrophy Beta</span>
             </div>
           </div>
@@ -51,19 +50,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
             >
               Mesocycles
             </div>
-            {/* <div 
-              onClick={() => handleLinkClick('/templates')}
-              className={`block px-2 py-2 text-sm font-semibold rounded cursor-pointer ${currentRoute === '/templates' ? 'bg-gray-700' : ''}`}
-            >
-              Templates
-            </div> */}
-            <div 
+            <div
               onClick={() => handleLinkClick('/addcustomexercise')}
               className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/addcustomexercise' ? 'bg-gray-700' : ''}`}
             >
               Custom Exercises
             </div>
-            <div 
+            <div
               onClick={() => handleLinkClick('/new-mesocycle')}
               className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/new-mesocycle' ? 'bg-gray-700' : ''}`}
             >
@@ -71,30 +64,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
             </div>
           </nav>
           <div className="px-2 py-4 bg-gray-800">
-            <Link href="/light-theme" passHref>
-              <div className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/light-theme' ? 'bg-gray-700' : ''}`}>Light Theme</div>
-            </Link>
-            <Link href="/profile" passHref>
-              <div className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/profile' ? 'bg-gray-700' : ''}`}>Profile</div>
-            </Link>
-            <Link href="/sign-out" passHref>
-              <div className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/sign-out' ? 'bg-gray-700' : ''}`}>Sign out</div>
-            </Link>
+            <div
+              onClick={() => handleLinkClick('/light-theme')}
+              className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/light-theme' ? 'bg-gray-700' : ''}`}
+            >
+              Light Theme
+            </div>
+            <div
+              onClick={() => handleLinkClick('/profile')}
+              className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/profile' ? 'bg-gray-700' : ''}`}
+            >
+              Profile
+            </div>
+            <div
+              onClick={() => handleLinkClick('/sign-out')}
+              className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === '/sign-out' ? 'bg-gray-700' : ''}`}
+            >
+              Sign out
+            </div>
           </div>
         </aside>
       </div>
-
-      {/* Toggle button */}
-      <button
-        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        className="fixed top-4 left-4 bg-gray-700 text-white px-2 py-1 rounded z-50"
-      >
-        {isSidebarCollapsed ? (
-          <i className="fas fa-chevron-right"></i>
-        ) : (
-          <i className="fas fa-chevron-left"></i>
-        )}
-      </button>
     </>
   );
 };

@@ -99,7 +99,7 @@ const AddCustomExercise: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <main className="flex-1 p-6 bg-gray-100 pt-12">
+            <main className="flex-1 p-6 bg-gray-100">
                 <div className="max-w-3xl mx-auto flex justify-between items-center">
                     <h2 className="text-2xl font-semibold text-black mb-4">Custom Exercises</h2>
                     <button

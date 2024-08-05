@@ -14,9 +14,33 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
         isSidebarCollapsed={isSidebarCollapsed}
         setIsSidebarCollapsed={setIsSidebarCollapsed}
       />
-      <main>
-        {children}
-      </main>
+      <div className="min-h-screen flex flex-col bg-gray-100">
+        {/* Toggle button */}
+        {(
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="text-violet-700 px-2 py-1 rounded ml-2 mt-4 z-50 self-start"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        )}
+        <main className="flex-grow">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };
