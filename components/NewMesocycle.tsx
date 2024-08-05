@@ -7,7 +7,10 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { FaTrash, FaPen, FaCopy, FaEllipsisV } from 'react-icons/fa';
 import { useExerciseOptions } from '../utils/useExerciseOptions';
 import Dropdown from 'react-dropdown';
-import '../styles/globals.css'
+import '../styles/globals.css';
+import SelectMuscleGroupModal from '../components/SelectMuscleGroupModal';
+import CopyExercisesModal from '../components/CopyExercisesModal';
+import SelectTemplateModal from '../components/SelectTemplateModal';
 
 interface Exercise {
     name: string;
@@ -185,7 +188,7 @@ const NewMesocycle: React.FC = () => {
         mesocycles.push({ name: mesocycleName, templateName: selectedTemplate?.label, days: Array.from(mesocycle.entries()) });
         localStorage.setItem('mesocycles', JSON.stringify(mesocycles));
         alert('Mesocycle created and saved!');
-        console.log("Mesocycle: ", mesocycle)
+        console.log("Mesocycle: ", mesocycle);
         router.push('/mesocycles');
     };
 
@@ -329,7 +332,7 @@ const NewMesocycle: React.FC = () => {
                 setShowDropdownModal(true);
                 break;
             case 'resetTemplate':
-                resetTemplate()
+                resetTemplate();
                 break;
             default:
                 break;
@@ -403,7 +406,7 @@ const NewMesocycle: React.FC = () => {
                                             <FaTrash />
                                         </button>
                                         <button
-                                            className="text-blue-500 text-md"
+                                            className="text-violet-700 text-md"
                                             onClick={() => handleOpenCopyModal(dayIndex)}
                                         >
                                             <FaCopy />
@@ -451,83 +454,35 @@ const NewMesocycle: React.FC = () => {
                 </div>
             </DragDropContext>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded shadow-md w-1/3">
-                        <h3 className="text-xl mb-4">Select Muscle Group</h3>
-                        <Select
-                            options={sortedMuscleGroups}
-                            onChange={handleMuscleGroupSelect}
-                            placeholder="Choose a muscle group"
-                            className="text-black"
-                            classNamePrefix="react-select"
-                        />
-                        <button
-                            className="bg-red-500 text-white px-4 py-2 rounded mt-4"
-                            onClick={() => setShowModal(false)}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            )}
+            <SelectMuscleGroupModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSelect={handleMuscleGroupSelect}
+                muscleGroups={sortedMuscleGroups}
+            />
 
-            {showCopyModal.show && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded shadow-md w-1/3">
-                        <h3 className="text-xl mb-4">Select Target Day</h3>
-                        <Select
-                            options={dayOptions.filter(day => !days.some(d => d.name === day.value))}
-                            onChange={handleSelectCopyTargetDay}
-                            placeholder="Choose a day"
-                            className="text-black"
-                            classNamePrefix="react-select"
-                        />
-                        <button
-                            className="bg-violet-950 text-white px-4 py-2 rounded mt-4 uppercase"
-                            onClick={handleConfirmCopy}
-                        >
-                            Copy
-                        </button>
-                        <button
-                            className="bg-red-500 text-white px-4 py-2 rounded mt-4 ml-2 uppercase"
-                            onClick={() => setShowCopyModal({ show: false, sourceDayIndex: null })}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            )}
+            <CopyExercisesModal
+                isOpen={showCopyModal.show}
+                onClose={() => setShowCopyModal({ show: false, sourceDayIndex: null })}
+                onCopy={handleConfirmCopy}
+                onSelectTargetDay={handleSelectCopyTargetDay}
+                dayOptions={dayOptions.filter(day => !days.some(d => d.name === day.value))}
+                selectedDay={
+                    copyTargetDayIndex !== null
+                        ? { label: days[copyTargetDayIndex].name, value: days[copyTargetDayIndex].name }
+                        : null
+                }
+            />
 
-            {showDropdownModal && dropdownModalContent === 'selectTemplate' && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded shadow-md w-1/3">
-                        <h3 className="text-xl mb-4">Select Template</h3>
-                        <Select
-                            options={templates}
-                            onChange={handleTemplateChange}
-                            placeholder="Choose a template"
-                            className="text-black"
-                            classNamePrefix="react-select"
-                            value={tempSelectedTemplate}
-                        />
-                        <div className="flex justify-between mt-4">
-                            <button
-                                className="bg-red-500 text-white px-4 py-2 rounded uppercase"
-                                onClick={() => setShowDropdownModal(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="bg-gray-300 text-white px-4 py-2 rounded uppercase"
-                                onClick={handleConfirmTemplate}
-                            >
-                                Confirm
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <SelectTemplateModal
+                isOpen={showDropdownModal && dropdownModalContent === 'selectTemplate'}
+                onClose={() => setShowDropdownModal(false)}
+                templates={templates}
+                onSelectTemplate={handleTemplateChange}
+                selectedTemplate={tempSelectedTemplate}
+                onConfirm={handleConfirmTemplate}
+            />
+
             <div className="flex justify-end p-6 pr-0">
                 <button
                     className="bg-gray-300 text-black uppercase font-bold px-4 py-2"
@@ -536,7 +491,7 @@ const NewMesocycle: React.FC = () => {
                     Create
                 </button>
             </div>
-        </div >
+        </div>
     );
 };
 
