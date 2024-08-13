@@ -4,7 +4,7 @@ import Select, { SingleValue } from 'react-select';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FaTrash, FaPen, FaCopy, FaEllipsisV } from 'react-icons/fa';
+import { FaTrash, FaPen, FaCopy } from 'react-icons/fa';
 import { useExerciseOptions } from '../utils/useExerciseOptions';
 import Dropdown from 'react-dropdown';
 import '../styles/globals.css';
@@ -12,20 +12,9 @@ import SelectMuscleGroupModal from '../components/SelectMuscleGroupModal';
 import CopyExercisesModal from '../components/CopyExercisesModal';
 import SelectTemplateModal from '../components/SelectTemplateModal';
 
-interface Exercise {
-    name: string;
-    muscleGroup: string;
-}
-
 interface Day {
     name: string;
     exercises: { muscleGroup: string, exercise: string | null }[];
-}
-
-interface Mesocycle {
-    name: string;
-    templateName: string;
-    days: [string, { muscleGroup: string; exercise: string | null }[]][];
 }
 
 const dayOptions = [
@@ -382,75 +371,84 @@ const NewMesocycle: React.FC = () => {
             </header>
 
             <DragDropContext onDragEnd={onDragEnd}>
-                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 auto-cols-fr">
-                    {days.map((day, dayIndex) => (
-                        <Droppable key={dayIndex} droppableId={`${dayIndex}`}>
-                            {(provided) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className="bg-white p-4 rounded shadow"
-                                >
-                                    <div className="flex justify-between items-center mb-2">
-                                        <Select
-                                            options={getFilteredDayOptions(day.name)}
-                                            onChange={(option) => handleDayNameChange(dayIndex, option)}
-                                            value={dayOptions.find(d => d.value === day.name)}
-                                            className="text-black w-2/3"
-                                            classNamePrefix="react-select"
-                                        />
+                <div className="dynamic-grid-container" data-columns={days.length}>
+                    <div className="dynamic-grid">
+                        {days.map((day, dayIndex) => (
+                            <Droppable key={dayIndex} droppableId={`${dayIndex}`}>
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className="bg-white p-4 rounded shadow"
+                                    >
+                                        <div className="flex justify-between items-center mb-2">
+                                            <Select
+                                                components={{
+                                                    IndicatorSeparator: () => null,
+                                                    DropdownIndicator: () => null
+                                                }}
+                                                options={getFilteredDayOptions(day.name)}
+                                                onChange={(option) => handleDayNameChange(dayIndex, option)}
+                                                value={dayOptions.find(d => d.value === day.name)}
+                                                className="text-black w-2/3"
+                                                classNamePrefix="react-select"
+                                            />
+                                            <button
+                                                className="text-gray-400 text-md"
+                                                onClick={() => handleRemoveDay(dayIndex)}
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                            <button
+                                                className="text-gray-700 text-md"
+                                                onClick={() => handleOpenCopyModal(dayIndex)}
+                                            >
+                                                <FaCopy />
+                                            </button>
+                                        </div>
+                                        {day.exercises.map((exercise, exerciseIndex) => (
+                                            <Draggable
+                                                key={exerciseIndex}
+                                                draggableId={`${dayIndex}-${exerciseIndex}`}
+                                                index={exerciseIndex}
+                                            >
+                                                {(provided) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        className="mb-2 p-2 border rounded"
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-sm font-bold text-violet-500">{exercise.muscleGroup.toUpperCase()}</span>
+                                                        </div>
+                                                        <Select
+                                                            components={{
+                                                                IndicatorSeparator: () => null
+                                                            }}
+                                                            options={exercisesByMuscle[exercise.muscleGroup]?.map(ex => ({ value: ex.name, label: ex.name })) || []}
+                                                            onChange={(option) => handleExerciseChange(dayIndex, exerciseIndex, option)}
+                                                            placeholder=""
+                                                            className="text-black mt-2"
+                                                            classNamePrefix="react-select"
+                                                            value={exercise.exercise ? { value: exercise.exercise, label: exercise.exercise } : null}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
                                         <button
-                                            className="text-gray-400 text-md"
-                                            onClick={() => handleRemoveDay(dayIndex)}
+                                            className="bg-gray-400 text-white px-2 py-1 rounded mt-2"
+                                            onClick={() => handleAddExercise(dayIndex)}
                                         >
-                                            <FaTrash />
-                                        </button>
-                                        <button
-                                            className="text-violet-700 text-md"
-                                            onClick={() => handleOpenCopyModal(dayIndex)}
-                                        >
-                                            <FaCopy />
+                                            Add Exercise
                                         </button>
                                     </div>
-                                    {day.exercises.map((exercise, exerciseIndex) => (
-                                        <Draggable
-                                            key={exerciseIndex}
-                                            draggableId={`${dayIndex}-${exerciseIndex}`}
-                                            index={exerciseIndex}
-                                        >
-                                            {(provided) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className="mb-2 p-2 border rounded"
-                                                >
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-sm font-bold text-red-500">{exercise.muscleGroup.toUpperCase()}</span>
-                                                    </div>
-                                                    <Select
-                                                        options={exercisesByMuscle[exercise.muscleGroup]?.map(ex => ({ value: ex.name, label: ex.name })) || []}
-                                                        onChange={(option) => handleExerciseChange(dayIndex, exerciseIndex, option)}
-                                                        placeholder="Choose an exercise"
-                                                        className="text-black mt-2"
-                                                        classNamePrefix="react-select"
-                                                        value={exercise.exercise ? { value: exercise.exercise, label: exercise.exercise } : null}
-                                                    />
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                    <button
-                                        className="bg-green-500 text-white px-2 py-1 rounded mt-2"
-                                        onClick={() => handleAddExercise(dayIndex)}
-                                    >
-                                        Add Exercise
-                                    </button>
-                                </div>
-                            )}
-                        </Droppable>
-                    ))}
+                                )}
+                            </Droppable>
+                        ))}
+                    </div>
                 </div>
             </DragDropContext>
 

@@ -98,7 +98,7 @@ const CurrentWorkout: React.FC = () => {
       const savedNotes = localStorage.getItem(`workoutNotes_${dateKey}`);
       setNotes(savedNotes || '');
     }
-  }, [isMounted, selectedDate]);  
+  }, [isMounted, selectedDate]);
 
   useEffect(() => {
     if (isMounted) {
@@ -165,7 +165,7 @@ const CurrentWorkout: React.FC = () => {
       }
       return updated;
     });
-  };  
+  };
 
   const handleRemoveExercise = (exerciseName: string) => {
     setWorkoutExercises(prev => {
@@ -238,17 +238,20 @@ const CurrentWorkout: React.FC = () => {
   const allExercises = [...exercises, ...customExercises].sort((a, b) => a.name.localeCompare(b.name));
   const exerciseOptions = allExercises.map(exercise => ({ value: exercise.name, label: exercise.name }));
 
-  const handleDateChange = (value: Date | Date[] | null) => {
+  type ValuePiece = Date | null;
+  type Value = ValuePiece | [ValuePiece, ValuePiece];
+
+  const handleDateChange = (value: Value, event: React.MouseEvent<HTMLButtonElement>): void => {
     if (!value || Array.isArray(value)) return;
     const normalisedDate = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
     setSelectedDate(normalisedDate);
-  
+
     if (isMounted) {
       const dateKey = normalisedDate.toISOString().split('T')[0];
       const savedExercises = localStorage.getItem(`workoutExercises_${dateKey}`);
       const savedWorkoutExerciseOrder = localStorage.getItem(`workoutExerciseOrder_${dateKey}`);
       const parsedExercises: ExerciseMap = savedExercises ? new Map<string, Set[]>(JSON.parse(savedExercises)) : new Map();
-      
+
       if (savedWorkoutExerciseOrder) {
         const parsedOrder: string[] = JSON.parse(savedWorkoutExerciseOrder);
         if (parsedOrder.length > 0) {
@@ -263,13 +266,12 @@ const CurrentWorkout: React.FC = () => {
         setWorkoutExerciseOrder(keys);
         localStorage.setItem(`workoutExerciseOrder_${dateKey}`, JSON.stringify(keys));
       }
-  
+
       const savedNotes = localStorage.getItem(`workoutNotes_${dateKey}`);
       setNotes(savedNotes || '');
     }
-  
     setIsCalendarVisible(false);
-  };  
+  };
 
   const calculateDayAndWeek = (selectedDate: Date, startDate: Date, duration: number) => {
     const start = new Date(startDate);
