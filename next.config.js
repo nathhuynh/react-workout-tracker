@@ -1,7 +1,7 @@
 const withTM = require('next-transpile-modules')(['react-calendar', 'react-dropdown', 'react-select']);
 
 module.exports = withTM({
-  output: 'export',
+  // output: 'export',
   distDir: './dist',
   webpack: (config, { isServer }) => {
     config.module.rules.push({

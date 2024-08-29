@@ -19,7 +19,7 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({ children }) => {
         {(
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-violet-700 px-2 py-1 rounded ml-2 mt-4 z-50 self-start"
+            className="text-indigo-700 px-2 py-1 rounded ml-2 mt-4 z-50 self-start"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

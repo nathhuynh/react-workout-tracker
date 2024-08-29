@@ -1,5 +1,8 @@
 import React from 'react';
 import { useRouter } from 'next/router';
+import { useSession, signOut } from 'next-auth/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
 
 interface SidebarProps {
   isSidebarCollapsed: boolean;
@@ -9,10 +12,21 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarCollapsed }) => {
   const router = useRouter();
   const currentRoute = router.pathname;
+  const { data: session } = useSession();
 
   const handleLinkClick = (href: string) => {
     setIsSidebarCollapsed(true);
     router.push(href);
+  };
+
+  const handleAuthAction = async () => {
+    if (session) {
+      await signOut({ redirect: false });
+      router.push('/signin'); // Redirect to sign-in page after signing out
+    } else {
+      router.push('/signin');
+    }
+    setIsSidebarCollapsed(true);
   };
 
   const menuItems = [
@@ -24,9 +38,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
 
   const bottomItems = [
     { name: 'Light Theme', href: '/light-theme' },
-    { name: 'Profile', href: '/profile' },
-    { name: 'Sign out', href: '/sign-out' },
-  ];
+    session && {
+      name: (
+        <>
+          <FontAwesomeIcon icon={faUser} />
+          <span className="ml-2">{session.user.username}</span>
+        </>
+      ),
+      href: '/profile'
+    },
+    { name: session ? 'Sign out' : 'Sign in', action: handleAuthAction },
+  ].filter(Boolean);
 
   return (
     <>
@@ -44,10 +66,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
           } w-64 shadow-lg`}
       >
         <aside className="flex flex-col h-full">
-          <div className="px-4 py-2 bg-violet-100 flex items-center justify-between">
+          <div className="px-4 py-2 bg-indigo-100 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-purple-800 pt-2 pl-10 pb-2">RP</h1>
-              <span className="text-sm text-purple-600 font-semi">Hypertrophy Beta</span>
+              <h1 className="text-2xl font-bold text-indigo-800 pt-2 pl-10 pb-2">RP</h1>
+              <span className="text-sm text-indigo-600 font-semi">Hypertrophy Beta</span>
             </div>
           </div>
           <nav className="flex-1 px-2 py-4 overflow-y-auto">
@@ -55,24 +77,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, setIsSidebarColla
               <div
                 key={index}
                 onClick={() => handleLinkClick(item.href)}
-                className={`block px-2 py-2 text-sm font-semibold rounded cursor-pointer ${currentRoute === item.href ? 'bg-purple-200 text-purple-800' : 'hover:bg-purple-50'
+                className={`block px-2 py-2 text-sm font-semibold rounded cursor-pointer ${currentRoute === item.href ? 'bg-indigo-200 text-indigo-800' : 'hover:bg-indigo-50'
                   }`}
               >
                 {item.name}
               </div>
             ))}
           </nav>
-          <div className="px-2 py-4 bg-purple-100">
-            {bottomItems.map((item, index) => (
-              <div
-                key={index}
-                onClick={() => handleLinkClick(item.href)}
-                className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === item.href ? 'bg-purple-200 text-purple-800' : 'hover:bg-purple-50'
-                  }`}
-              >
-                {item.name}
-              </div>
-            ))}
+          <div className="px-2 py-4 bg-indigo-100">
+            {bottomItems.map((item, index) =>
+              item && (
+                <div
+                  key={index}
+                  onClick={item.action || (() => handleLinkClick(item.href!))}
+                  className={`block px-2 py-2 text-sm cursor-pointer ${currentRoute === item.href ? 'bg-indigo-200 text-indigo-800' : 'hover:bg-indigo-50'
+                    }`}
+                >
+                  {item.name}
+                </div>
+              )
+            )}
           </div>
         </aside>
       </div>

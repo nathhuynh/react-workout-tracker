@@ -1,5 +1,5 @@
 export interface Exercise {
-  id: string;
+  id?: number;
   name: string;
   force: string;
   level: string;
@@ -23,7 +23,7 @@ export const fetchExercises = async (): Promise<Exercise[]> => {
   try {
     const response = await fetch('https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json');
     const data: Exercise[] = await response.json();
-    // Initialize 'sets' as an empty array
+    // Initialise 'sets' as an empty array
     return data.map(exercise => ({ ...exercise, sets: [] }));
   } catch (error) {
     console.error('Error fetching exercises:', error);

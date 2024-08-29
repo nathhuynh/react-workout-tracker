@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchExercises, Exercise } from './exerciseService';
+import axios from 'axios';
+import { Exercise } from '../utils/exerciseService'
 
 export interface ExerciseOptions {
   equipmentTypes: string[];
@@ -39,38 +40,40 @@ export const useExerciseOptions = (): ExerciseOptions => {
     };
 
     const fetchOptions = async () => {
-      const exercises: Exercise[] = await fetchExercises();
-      const customExercises = localStorage.getItem('customExercises');
-      const parsedCustomExercises = customExercises ? JSON.parse(customExercises) : [];
-      const allExercises = preprocessExercises([...exercises, ...parsedCustomExercises]);
-      localStorage.setItem('preprocessedExercises', JSON.stringify(allExercises));
-      const equipmentTypes = Array.from(
-        new Set(allExercises.map(ex => capitalize(ex.equipment)).filter(Boolean))
-      ).sort();
+      try {
+        const response = await axios.get<Exercise[]>('/api/exercises');
+        const exercises = preprocessExercises(response.data);
 
-      const primaryMusclesSet = new Set<string>();
-      const exercisesByMuscle: { [muscle: string]: Exercise[] } = {};
+        const equipmentTypes = Array.from(
+          new Set(exercises.map(ex => capitalize(ex.equipment)).filter(Boolean))
+        ).sort();
 
-      allExercises.forEach(exercise => {
-        exercise.primaryMuscles.forEach((muscle: string) => {
-          primaryMusclesSet.add(muscle);
+        const primaryMusclesSet = new Set<string>();
+        const exercisesByMuscle: { [muscle: string]: Exercise[] } = {};
 
-          if (!exercisesByMuscle[muscle]) {
-            exercisesByMuscle[muscle] = [];
-          }
-          exercisesByMuscle[muscle].push(exercise);
+        exercises.forEach(exercise => {
+          exercise.primaryMuscles.forEach((muscle: string) => {
+            primaryMusclesSet.add(muscle);
+
+            if (!exercisesByMuscle[muscle]) {
+              exercisesByMuscle[muscle] = [];
+            }
+            exercisesByMuscle[muscle].push(exercise);
+          });
         });
-      });
 
-      const primaryMuscles = Array.from(primaryMusclesSet).sort();
-      const categories = Array.from(new Set(allExercises.map(ex => capitalize(ex.category)))).sort();
+        const primaryMuscles = Array.from(primaryMusclesSet).sort();
+        const categories = Array.from(new Set(exercises.map(ex => capitalize(ex.category)))).sort();
 
-      setOptions({
-        equipmentTypes,
-        primaryMuscles,
-        categories,
-        exercisesByMuscle,
-      });
+        setOptions({
+          equipmentTypes,
+          primaryMuscles,
+          categories,
+          exercisesByMuscle,
+        });
+      } catch (error) {
+        console.error('Error fetching exercises:', error);
+      }
     };
 
     fetchOptions();

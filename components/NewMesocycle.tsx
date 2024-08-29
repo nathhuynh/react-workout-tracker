@@ -420,7 +420,7 @@ const NewMesocycle: React.FC = () => {
                                                         className="mb-2 p-2 border rounded"
                                                     >
                                                         <div className="flex justify-between items-center">
-                                                            <span className="text-sm font-bold text-violet-500">{exercise.muscleGroup.toUpperCase()}</span>
+                                                            <span className="text-sm font-bold text-indigo-500">{exercise.muscleGroup.toUpperCase()}</span>
                                                         </div>
                                                         <Select
                                                             components={{
@@ -483,7 +483,7 @@ const NewMesocycle: React.FC = () => {
 
             <div className="flex justify-end p-6 pr-0">
                 <button
-                    className="bg-gray-300 text-black uppercase font-bold px-4 py-2"
+                    className="bg-gray-300 text-black uppercase font-bold px-4 py-2 rounded"
                     onClick={handleCreateMesocycle}
                 >
                     Create

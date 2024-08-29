@@ -1,0 +1,176 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  password      String
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  customExercises   CustomExercise[]
+  workouts          Workout[]
+  mesocycles        Mesocycle[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Exercise {
+  id                Int      @id @default(autoincrement())
+  name              String   @unique
+  force             String?
+  level             String?
+  mechanic          String?
+  equipment         String?
+  primaryMuscles    String[]
+  secondaryMuscles  String[]
+  instructions      String[]
+  category          String?
+  images            String[]
+  workoutExercises  WorkoutExercise[]
+  mesocycleExercises MesocycleExercise[]
+}
+
+model CustomExercise {
+  id             Int      @id @default(autoincrement())
+  name           String
+  equipment      String?
+  primaryMuscles String[]
+  category       String?
+  userId         String   // Changed from Int to String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workout {
+  id               Int               @id @default(autoincrement())
+  date             DateTime
+  exercises        Json
+  exerciseOrder    String[]
+  notes            String?
+  workoutExercises WorkoutExercise[]
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([date, userId])
+}
+
+model WorkoutExercise {
+  id        Int     @id @default(autoincrement())
+  workoutId Int
+  workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exerciseId Int
+  exercise  Exercise @relation(fields: [exerciseId], references: [id])
+  sets      Set[]
+}
+
+model Set {
+  id                Int             @id @default(autoincrement())
+  workoutExerciseId Int
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id])
+  weight            Float
+  reps              Int
+  rir               Int?
+}
+
+model MesocycleTemplate {
+  id    Int           @id @default(autoincrement())
+  label String
+  value String        @unique
+  days  TemplateDay[]
+}
+
+model TemplateDay {
+  id         Int                @id @default(autoincrement())
+  name       String
+  template   MesocycleTemplate  @relation(fields: [templateId], references: [id])
+  templateId Int
+  exercises  TemplateExercise[]
+  order      Int
+
+  @@unique([templateId, order])
+}
+
+model TemplateExercise {
+  id          Int         @id @default(autoincrement())
+  muscleGroup String
+  day         TemplateDay @relation(fields: [dayId], references: [id])
+  dayId       Int
+  order       Int
+
+  @@unique([dayId, order])
+}
+
+model Mesocycle {
+  id           Int      @id @default(autoincrement())
+  name         String
+  templateName String?
+  days         Day[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String   // Changed from Int to String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Day {
+  id          Int                 @id @default(autoincrement())
+  name        String
+  mesocycle   Mesocycle           @relation(fields: [mesocycleId], references: [id])
+  mesocycleId Int
+  order       Int
+  exercises   MesocycleExercise[]
+
+  @@unique([mesocycleId, order])
+}
+
+model MesocycleExercise {
+  id          Int      @id @default(autoincrement())
+  day         Day      @relation(fields: [dayId], references: [id])
+  dayId       Int
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId  Int
+  muscleGroup String
+  order       Int
+
+  @@unique([dayId, order])
+}

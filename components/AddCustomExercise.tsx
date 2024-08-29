@@ -4,6 +4,9 @@ import { useExerciseOptions } from '../utils/useExerciseOptions';
 import 'react-dropdown/style.css';
 import '../styles/DotDropdownMenu.css';
 import { FaEllipsisV } from 'react-icons/fa';
+import { fetchCustomExercises, createCustomExercise, updateCustomExercise, deleteCustomExercise } from '../pages/api/customExercises';
+import axios from 'axios';
+import { useSession } from 'next-auth/react';
 
 const AddCustomExercise: React.FC = () => {
     const [name, setName] = useState('');
@@ -15,72 +18,146 @@ const AddCustomExercise: React.FC = () => {
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
     const { equipmentTypes, primaryMuscles: muscleOptions, categories } = useExerciseOptions();
+    const { data: session, status } = useSession();
 
     useEffect(() => {
-        const savedCustomExercises = localStorage.getItem('customExercises');
-        if (savedCustomExercises) {
-            setCustomExercises(JSON.parse(savedCustomExercises));
-        }
+        fetchExercises();
     }, []);
+
+    const fetchExercises = async () => {
+        try {
+            const exercises = await fetchCustomExercises();
+            setCustomExercises(exercises);
+        } catch (error) {
+            console.error('Failed to fetch custom exercises:', error);
+        }
+    };
+    // useEffect(() => {
+    //     const savedCustomExercises = localStorage.getItem('customExercises');
+    //     if (savedCustomExercises) {
+    //         setCustomExercises(JSON.parse(savedCustomExercises));
+    //     }
+    // }, []);
 
     const generateId = (name: string) => name.replace(/\s+/g, '_').toLowerCase();
 
-    const handleSave = () => {
-        const id = generateId(name);
+    const handleSave = async () => {
+        if (status !== 'authenticated') {
+            console.error('User is not authenticated');
+            // Handle unauthenticated user (e.g., show error message, redirect to login)
+            return;
+        }
+
         const newExercise = {
-            id,
             name,
-            force: 'N/A',
-            level: 'N/A',
-            mechanic: 'N/A',
             equipment: equipmentType?.value || 'N/A',
             primaryMuscles: primaryMuscles.map(muscle => muscle.value),
-            secondaryMuscles: [],
-            instructions: [],
             category: category?.value || 'N/A',
-            images: [],
-            sets: [],
         };
 
-        const updatedCustomExercises = [...customExercises, newExercise];
-        setCustomExercises(updatedCustomExercises);
-        localStorage.setItem('customExercises', JSON.stringify(updatedCustomExercises));
-
-        // Clear form
-        setName('');
-        setEquipmentType(null);
-        setPrimaryMuscles([]);
-        setCategory(null);
-        setIsFormVisible(false);
-
-        console.log(newExercise);
+        try {
+            const createdExercise = await createCustomExercise(newExercise);
+            console.log('Exercise created successfully:', createdExercise);
+            await fetchExercises(); // Refresh the list
+            setIsFormVisible(false);
+            // Handle successful creation (e.g., show success message, clear form)
+        } catch (error) {
+            console.error('Failed to create custom exercise:', error);
+            // Handle error (e.g., show error message)
+        }
     };
+    // const handleSave = () => {
+    //     const id = generateId(name);
+    //     const newExercise = {
+    //         id,
+    //         name,
+    //         force: 'N/A',
+    //         level: 'N/A',
+    //         mechanic: 'N/A',
+    //         equipment: equipmentType?.value || 'N/A',
+    //         primaryMuscles: primaryMuscles.map(muscle => muscle.value),
+    //         secondaryMuscles: [],
+    //         instructions: [],
+    //         category: category?.value || 'N/A',
+    //         images: [],
+    //         sets: [],
+    //     };
 
-    const handleRemove = (id: string) => {
-        const updatedCustomExercises = customExercises.filter(exercise => exercise.id !== id);
-        setCustomExercises(updatedCustomExercises);
-        localStorage.setItem('customExercises', JSON.stringify(updatedCustomExercises));
-        setSelectedExercise(null);
+    //     const updatedCustomExercises = [...customExercises, newExercise];
+    //     setCustomExercises(updatedCustomExercises);
+    //     localStorage.setItem('customExercises', JSON.stringify(updatedCustomExercises));
+
+    //     // Clear form
+    //     setName('');
+    //     setEquipmentType(null);
+    //     setPrimaryMuscles([]);
+    //     setCategory(null);
+    //     setIsFormVisible(false);
+
+    //     console.log(newExercise);
+    // };
+
+    const handleRemove = async (id: string) => {
+        try {
+            await deleteCustomExercise(id);
+            await fetchExercises(); // Refresh the list
+            setSelectedExercise(null);
+        } catch (error) {
+            console.error('Failed to delete custom exercise:', error);
+        }
     };
+    // const handleRemove = (id: string) => {
+    //     const updatedCustomExercises = customExercises.filter(exercise => exercise.id !== id);
+    //     setCustomExercises(updatedCustomExercises);
+    //     localStorage.setItem('customExercises', JSON.stringify(updatedCustomExercises));
+    //     setSelectedExercise(null);
+    // };
 
-    const handleUpdate = () => {
-        const updatedCustomExercises = customExercises.map(exercise => {
-            if (exercise.id === selectedExercise?.value) {
-                return {
-                    ...exercise,
-                    name,
-                    equipment: equipmentType?.value || 'N/A',
-                    primaryMuscles: primaryMuscles.map(muscle => muscle.value),
-                    category: category?.value || 'N/A',
-                };
+    const handleUpdate = async () => {
+        if (!selectedExercise) {
+            console.error('No exercise selected for update');
+            return;
+        }
+    
+        const updatedExercise = {
+            name,
+            equipment: equipmentType?.value || 'N/A',
+            primaryMuscles: primaryMuscles.map(muscle => muscle.value),
+            category: category?.value || 'N/A',
+        };
+    
+        try {
+            console.log('Updating exercise:', selectedExercise.value, updatedExercise);
+            const result = await updateCustomExercise(selectedExercise.value, updatedExercise);
+            console.log('Update result:', result);
+            await fetchExercises(); // Refresh the list
+            setIsFormVisible(false);
+        } catch (error) {
+            console.error('Failed to update custom exercise:', error);
+            if (axios.isAxiosError(error)) {
+                console.error('Error response:', error.response?.data);
+                console.error('Error status:', error.response?.status);
             }
-            return exercise;
-        });
-
-        setCustomExercises(updatedCustomExercises);
-        localStorage.setItem('customExercises', JSON.stringify(updatedCustomExercises));
-        setIsFormVisible(false);
+        }
     };
+    // const handleUpdate = () => {
+    //     const updatedCustomExercises = customExercises.map(exercise => {
+    //         if (exercise.id === selectedExercise?.value) {
+    //             return {
+    //                 ...exercise,
+    //                 name,
+    //                 equipment: equipmentType?.value || 'N/A',
+    //                 primaryMuscles: primaryMuscles.map(muscle => muscle.value),
+    //                 category: category?.value || 'N/A',
+    //             };
+    //         }
+    //         return exercise;
+    //     });
+
+    //     setCustomExercises(updatedCustomExercises);
+    //     localStorage.setItem('customExercises', JSON.stringify(updatedCustomExercises));
+    //     setIsFormVisible(false);
+    // };
 
     const selectOptions = (options: string[]) => options.map(option => ({ value: option, label: option }));
     const customExerciseOptions = customExercises.map(exercise => ({ value: exercise.id, label: exercise.name }));
@@ -293,7 +370,7 @@ const AddCustomExercise: React.FC = () => {
                                         />
                                     </div>
                                     <div className="flex justify-between">
-                                        <button className="px-4 py-2 bg-gray-200 rounded" onClick={() => {
+                                        <button className="px-4 py-2 uppercase font-bold text-black rounded" onClick={() => {
                                             setName('');
                                             setEquipmentType(null);
                                             setPrimaryMuscles([]);
@@ -301,9 +378,9 @@ const AddCustomExercise: React.FC = () => {
                                             setIsFormVisible(false);
                                         }}>Cancel</button>
                                         {selectedExercise ? (
-                                            <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleUpdate}>Update</button>
+                                            <button className="px-4 py-2 uppercase font-bold text-black rounded" onClick={handleUpdate}>Update</button>
                                         ) : (
-                                            <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={handleSave}>Save</button>
+                                            <button className="px-4 py-2 uppercase font-bold text-black rounded" onClick={handleSave}>Save</button>
                                         )}
                                     </div>
                                 </div>

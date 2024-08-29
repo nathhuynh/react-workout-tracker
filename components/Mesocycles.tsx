@@ -239,13 +239,13 @@ const Mesocycles: React.FC = () => {
 
             <div className="modal-actions">
               <button
-                className="cancel-button"
+                className="px-4 py-2 uppercase font-bold text-black rounded"
                 onClick={() => setShowModal(false)}
               >
                 Cancel
               </button>
               <button
-                className="confirm-button"
+                className="px-4 py-2 uppercase font-bold text-black rounded"
                 onClick={handleLoadMesocycle}
               >
                 Load
