@@ -21,7 +21,7 @@ export interface WorkoutData {
 
 export const fetchWorkoutData = async (date: string, userId: string): Promise<WorkoutData> => {
   try {
-    const response = await api.get<WorkoutData>(`/workouts/${date}/${userId}`);
+    const response = await api.get<WorkoutData>(`/workouts/${date}`);
     return response.data;
   } catch (error) {
     console.error('Error in fetchWorkoutData:', error);
@@ -31,7 +31,7 @@ export const fetchWorkoutData = async (date: string, userId: string): Promise<Wo
 
 export const updateWorkoutData = async (date: string, userId: string, workoutData: WorkoutData): Promise<void> => {
   try {
-    await api.put(`/workouts/update/${userId}`, { date, ...workoutData });
+    await api.put(`/workouts/${date}`, workoutData);
   } catch (error) {
     console.error('Error in updateWorkoutData:', error);
     throw error;

@@ -111,6 +111,7 @@ model Set {
   weight            Float
   reps              Int
   rir               Int?
+  type              String?
 }
 
 model MesocycleTemplate {
