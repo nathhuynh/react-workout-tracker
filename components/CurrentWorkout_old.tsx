@@ -13,7 +13,7 @@ import { useExerciseOptions } from '../utils/useExerciseOptions';
 import '../styles/DotDropdownMenu.css';
 import Stopwatch from '../components/Stopwatch';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStopwatch, faSquare, faCheckSquare, faCalendarAlt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faStopwatch, faSquare, faCheckSquare, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import LastStatsModal from '../components/LastStatsModal';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
@@ -387,52 +387,41 @@ const CurrentWorkout: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 bg-gray-100 w-full">
         <div className="p-4 w-full lg:px-96">
-          {/* Date Header in a separate white box */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-            <h2 className="text-2xl text-black mb-2">
-              Day {day} Week {week}
-            </h2>
-            <header className="flex justify-between items-center">
-              <div className="flex items-center">
-                <h2 className="text-2xl font-semibold text-black">
-                  {selectedDate.toDateString()}
-                </h2>
-              </div>
-              <div className="flex items-center space-x-4 text-base">
-                {Object.values(workoutData.exercises).every(sets => sets.every(set => set.logged)) && (
-                  <FontAwesomeIcon icon={faCheckSquare} className="text-indigo-700" />
-                )}
-                <button
-                  className="text-indigo-950 flex items-center"
-                  onClick={() => setIsCalendarVisible(!isCalendarVisible)}
-                >
-                  <FontAwesomeIcon icon={faCalendarAlt} />
-                </button>
-                <button
-                  onClick={() => setIsStopwatchVisible(!isStopwatchVisible)}
-                  className="text-indigo-950 flex items-center"
-                >
-                  <FontAwesomeIcon icon={faStopwatch} />
-                </button>
-              </div>
-            </header>
-          </div>
+          <h2 className="text-2xl text-black">
+            {/* TODO: Add Mesocycle name */}
+            Day {day} Week {week}
+          </h2>
+          <header className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <h2 className="text-2xl font-semibold text-black">
+                {selectedDate.toDateString()}
+              </h2>
+            </div>
+            <div className="flex items-center space-x-4 text-base">
+              {Object.values(workoutData.exercises).every(sets => sets.every(set => set.logged)) && (
+                <FontAwesomeIcon icon={faCheckSquare} className="text-indigo-700" />
+              )}
+              <button
+                className="text-indigo-950 flex items-center"
+                onClick={() => setIsCalendarVisible(!isCalendarVisible)}
+              >
+                <FontAwesomeIcon icon={faCalendarAlt} />
+              </button>
+              <button
+                onClick={() => setIsStopwatchVisible(!isStopwatchVisible)}
+                className="text-indigo-950 flex items-center"
+              >
+                <FontAwesomeIcon icon={faStopwatch} />
+              </button>
+            </div>
+          </header>
 
           {isCalendarVisible && (
-            <div className="mb-4">
+            <div className="mb-4 flex justify-center">
               <Calendar
+                className="react-calendar"
                 onChange={handleDateChange}
                 value={selectedDate}
-                className="react-calendar bg-white shadow-md rounded-lg p-4 w-full max-w-md mx-auto"
-                tileClassName={({ date, view }) =>
-                  view === 'month' && date.toDateString() === selectedDate.toDateString()
-                    ? 'bg-indigo-600 text-white rounded-full'
-                    : ''
-                }
-                prevLabel={<span className="text-indigo-600">&lsaquo;</span>}
-                nextLabel={<span className="text-indigo-600">&rsaquo;</span>}
-                prev2Label={<span className="text-indigo-600">&laquo;</span>}
-                next2Label={<span className="text-indigo-600">&raquo;</span>}
               />
             </div>
           )}
@@ -476,167 +465,155 @@ const CurrentWorkout: React.FC = () => {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className="mb-6 bg-white rounded shadow w-full relative"
+                            className="mb-6 p-4 bg-white rounded shadow w-full relative"
                           >
-                            <div className="p-4">
-                              <div className="flex justify-between items-center">
-                                <span className="bg-indigo-100 text-xs text-indigo-700 px-2 py-0.5 rounded-tl rounded-br uppercase font-semibold border-2 border-indigo-700 flex items-center">
-                                  {exercise.primaryMuscles.map(muscle => (
-                                    <span key={muscle}>{muscle}</span>
-                                  ))}
-                                  {sets.every((set: Set) => set.logged) && (
-                                    <FontAwesomeIcon icon={faCheckSquare} className="ml-2 text-indigo-700" />
-                                  )}
-                                </span>
-                                <Dropdown
-                                  options={options}
-                                  onChange={(option) => handleAsyncOperation(async () => await handleSelect(exerciseName, option), "Failed to perform selected action")}
-                                  placeholder=""
-                                  className="dropdown"
-                                  controlClassName="dropdown-control custom-control"
-                                  menuClassName="dropdown-menu"
-                                  arrowClosed={<CustomControl />}
-                                  arrowOpen={<CustomControl />}
-                                />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold text-black">{exercise.name}</h3>
-                                <p className="font-medium text-gray-600 uppercase text-xs pb-2">{exercise.equipment}</p>
-                              </div>
+                            <div className="flex justify-between items-center">
+                              <span className="bg-indigo-100 text-xs text-indigo-700 px-2 py-0.5 rounded-tl rounded-br uppercase font-semibold border-2 border-indigo-700 flex items-center">
+                                {exercise.primaryMuscles.map(muscle => (
+                                  <span key={muscle}>{muscle}</span>
+                                ))}
+                                {sets.every((set: Set) => set.logged) && (
+                                  <FontAwesomeIcon icon={faCheckSquare} className="ml-2 text-indigo-700" />
+                                )}
+                              </span>
+                              <Dropdown
+                                options={options}
+                                onChange={(option) => handleAsyncOperation(async () => await handleSelect(exerciseName, option), "Failed to perform selected action")}
+                                placeholder=""
+                                className="dropdown"
+                                controlClassName="dropdown-control custom-control"
+                                menuClassName="dropdown-menu"
+                                arrowClosed={<CustomControl />}
+                                arrowOpen={<CustomControl />}
+                              />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-black">{exercise.name}</h3>
+                              <p className="font-medium text-gray-600 uppercase text-xs pb-2">{exercise.equipment}</p>
+                            </div>
 
-                              {sets && sets.length > 0 ? (
-                                <>
-                                  <div className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600 p-2 rounded-t">
-                                    <div>Set</div>
-                                    <div className="text-left pl-2">Weight (kg)</div>
-                                    <div className="text-left pl-5">Reps</div>
-                                    <div></div>
-                                  </div>
-                                  <div className="flex flex-col space-y-2">
-                                    {sets.map((set: Set, setIndex: number) => {
-                                      const displayIndex = sets.filter((s: Set) => s.type !== 'dropset').indexOf(set) + 1;
-                                      return (
-                                        <div key={setIndex} className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center border-t py-2">
-                                          <div className="flex-1 text-center font-bold">
-                                            {set.type === 'dropset' ? (
-                                              <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded">DS</span>
-                                            ) : (
-                                              displayIndex
-                                            )}
-                                          </div>
-                                          <div className="flex-1">
-                                            <Select
-                                              options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
-                                              onChange={(option: SingleValue<{ value: string; label: string }>) =>
-                                                handleAsyncOperation(
-                                                  async () => await handleInputChange(exerciseName, setIndex, 'weight', Number(option?.value)),
-                                                  "Failed to update weight"
-                                                )
-                                              }
-                                              placeholder="ENTER"
-                                              className="w-full text-black"
-                                              classNamePrefix="react-select"
-                                              value={{ value: set.weight.toString(), label: set.weight.toString() }}
-                                              components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-                                              styles={{
-                                                control: (provided, state) => ({
-                                                  ...provided,
-                                                  height: '40px',
-                                                  minHeight: '40px',
-                                                  justifyContent: 'center',
-                                                  borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                                  '&:hover': {
-                                                    borderColor: '#4A148C',
-                                                  },
-                                                }),
-                                                valueContainer: (provided) => ({
-                                                  ...provided,
-                                                  justifyContent: 'center',
-                                                }),
-                                                singleValue: (provided) => ({
-                                                  ...provided,
-                                                  textAlign: 'center',
-                                                })
-                                              }}
-                                            />
-                                          </div>
-                                          <div className="flex-1">
-                                            <Select
-                                              options={generateRepsOptions(50).map(option => ({ value: option.toString(), label: option.toString() }))}
-                                              onChange={(option: SingleValue<{ value: string; label: string }>) =>
-                                                handleAsyncOperation(
-                                                  async () => await handleInputChange(exerciseName, setIndex, 'reps', Number(option?.value)),
-                                                  "Failed to update reps"
-                                                )
-                                              }
-                                              placeholder="ENTER"
-                                              className="w-full text-black"
-                                              classNamePrefix="react-select text-black"
-                                              value={{ value: set.reps.toString(), label: set.reps.toString() }}
-                                              components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-                                              styles={{
-                                                control: (provided, state) => ({
-                                                  ...provided,
-                                                  height: '40px',
-                                                  minHeight: '40px',
-                                                  justifyContent: 'center',
-                                                  borderColor: state.isFocused ? 'purple' : '#e0e0e0',
-                                                  '&:hover': {
-                                                    borderColor: '#4A148C',
-                                                  },
-                                                }),
-                                                valueContainer: (provided) => ({
-                                                  ...provided,
-                                                  justifyContent: 'center',
-                                                }),
-                                                singleValue: (provided) => ({
-                                                  ...provided,
-                                                  textAlign: 'center',
-                                                })
-                                              }}
-                                            />
-                                          </div>
-                                          <div className="flex items-center justify-center">
-                                            {set.logged ? (
-                                              <FontAwesomeIcon
-                                                icon={faCheckSquare}
-                                                className="text-indigo-600 cursor-pointer"
-                                                style={{ fontSize: '24px' }}
-                                                onClick={() => handleAsyncOperation(async () => await handleLogSet(exerciseName, setIndex), "Failed to log set")}
-                                              />
-                                            ) : (
-                                              <FontAwesomeIcon
-                                                icon={faSquare}
-                                                className="cursor-pointer"
-                                                style={{
-                                                  fontSize: '19px',
-                                                  color: 'white',
-                                                  border: '2px solid #8b5cf6',
-                                                  borderRadius: '4px'
-                                                }}
-                                                onClick={() => handleAsyncOperation(async () => await handleLogSet(exerciseName, setIndex), "Failed to log set")}
-                                              />
-                                            )}
-                                          </div>
+                            {sets && sets.length > 0 ? (
+                              <>
+                                <div className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center text-sm font-semibold uppercase text-center text-gray-600">
+                                  <div>Set</div>
+                                  <div className="text-left pl-2">Weight (kg)</div>
+                                  <div className="text-left pl-5">Reps</div>
+                                  <div></div>
+                                </div>
+                                <div className="flex flex-col space-y-2">
+                                  {sets.map((set: Set, setIndex: number) => {
+                                    const displayIndex = sets.filter((s: Set) => s.type !== 'dropset').indexOf(set) + 1;
+                                    return (
+                                      <div key={setIndex} className="grid grid-cols-[40px_1fr_1fr_auto] gap-4 items-center border-t py-2">
+                                        <div className="flex-1 text-center font-bold">
+                                          {set.type === 'dropset' ? (
+                                            <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded">DS</span>
+                                          ) : (
+                                            displayIndex
+                                          )}
                                         </div>
-                                      );
-                                    })}
-                                  </div>
-                                </>
-                              ) : (
-                                <p className="text-sm text-gray-500">No sets available.</p>
-                              )}
-                            </div>
-                            {/* Add Set button at the bottom of each exercise */}
-                            <div className="bg-gray-50 px-4 py-3 rounded-b">
-                              <button
-                                onClick={() => handleAsyncOperation(async () => await handleAddSet(exerciseName), "Failed to add set")}
-                                className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center"
-                              >
-                                <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                                Add Set
-                              </button>
-                            </div>
+                                        <div className="flex-1">
+                                          <Select
+                                            options={generateWeightOptions().map(option => ({ value: option.toString(), label: option.toString() }))}
+                                            onChange={(option: SingleValue<{ value: string; label: string }>) =>
+                                              handleAsyncOperation(
+                                                async () => await handleInputChange(exerciseName, setIndex, 'weight', Number(option?.value)),
+                                                "Failed to update weight"
+                                              )
+                                            }
+                                            placeholder="ENTER"
+                                            className="w-full text-black"
+                                            classNamePrefix="react-select"
+                                            value={{ value: set.weight.toString(), label: set.weight.toString() }}
+                                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
+                                            styles={{
+                                              control: (provided, state) => ({
+                                                ...provided,
+                                                height: '40px',
+                                                minHeight: '40px',
+                                                justifyContent: 'center',
+                                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                                '&:hover': {
+                                                  borderColor: '#4A148C',
+                                                },
+                                              }),
+                                              valueContainer: (provided) => ({
+                                                ...provided,
+                                                justifyContent: 'center',
+                                              }),
+                                              singleValue: (provided) => ({
+                                                ...provided,
+                                                textAlign: 'center',
+                                              })
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex-1">
+                                          <Select
+                                            options={generateRepsOptions(50).map(option => ({ value: option.toString(), label: option.toString() }))}
+                                            onChange={(option: SingleValue<{ value: string; label: string }>) =>
+                                              handleAsyncOperation(
+                                                async () => await handleInputChange(exerciseName, setIndex, 'reps', Number(option?.value)),
+                                                "Failed to update reps"
+                                              )
+                                            }
+                                            placeholder="ENTER"
+                                            className="w-full text-black"
+                                            classNamePrefix="react-select text-black"
+                                            value={{ value: set.reps.toString(), label: set.reps.toString() }}
+                                            components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
+                                            styles={{
+                                              control: (provided, state) => ({
+                                                ...provided,
+                                                height: '40px',
+                                                minHeight: '40px',
+                                                justifyContent: 'center',
+                                                borderColor: state.isFocused ? 'purple' : '#e0e0e0',
+                                                '&:hover': {
+                                                  borderColor: '#4A148C',
+                                                },
+                                              }),
+                                              valueContainer: (provided) => ({
+                                                ...provided,
+                                                justifyContent: 'center',
+                                              }),
+                                              singleValue: (provided) => ({
+                                                ...provided,
+                                                textAlign: 'center',
+                                              })
+                                            }}
+                                          />
+                                        </div>
+                                        <div className="flex items-center justify-center">
+                                          {set.logged ? (
+                                            <FontAwesomeIcon
+                                              icon={faCheckSquare}
+                                              className="text-indigo-600 cursor-pointer"
+                                              style={{ fontSize: '24px' }}
+                                              onClick={() => handleAsyncOperation(async () => await handleLogSet(exerciseName, setIndex), "Failed to log set")}
+                                            />
+                                          ) : (
+                                            <FontAwesomeIcon
+                                              icon={faSquare}
+                                              className="cursor-pointer"
+                                              style={{
+                                                fontSize: '19px',
+                                                color: 'white',
+                                                border: '2px solid #8b5cf6',
+                                                borderRadius: '4px'
+                                              }}
+                                              onClick={() => handleAsyncOperation(async () => await handleLogSet(exerciseName, setIndex), "Failed to log set")}
+                                            />
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </>
+                            ) : (
+                              <p className="text-sm text-gray-500">No sets available.</p>
+                            )}
                           </div>
                         )}
                       </Draggable>
@@ -648,8 +625,7 @@ const CurrentWorkout: React.FC = () => {
             </Droppable>
           </DragDropContext>
 
-          {/* Notes in a separate white box */}
-          <div className="mt-4 bg-white rounded-lg shadow-md p-4">
+          <div className="mt-4">
             <label className="block mb-2 text-lg text-black">Notes</label>
             <textarea
               className="w-full p-2 border rounded text-gray-700"

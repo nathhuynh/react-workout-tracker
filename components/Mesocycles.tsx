@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { FaEllipsisV } from 'react-icons/fa';
+import { FaEllipsisV, FaPlus, FaDumbbell, FaCalendarAlt } from 'react-icons/fa';
+import ConfigureMesocycleModal from './ConfigureMesocycleModal';
 import '../styles/globals.css';
 
 interface Day {
@@ -18,7 +19,7 @@ interface Mesocycle {
 const Mesocycles: React.FC = () => {
   const [mesocycles, setMesocycles] = useState<Mesocycle[]>([]);
   const [selectedMesocycle, setSelectedMesocycle] = useState<Mesocycle | null>(null);
-  const [duration, setDuration] = useState<number>(4); // default to 4 weeks
+  const [duration, setDuration] = useState<number>(4);
   const [showModal, setShowModal] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
   const [setsPerExercise, setSetsPerExercise] = useState<Map<string, number>>(new Map());
@@ -41,7 +42,6 @@ const Mesocycles: React.FC = () => {
     setSelectedMesocycle(mesocycle);
     setShowModal(true);
 
-    // Initialise setsPerExercise with default value of 3 sets if not already set
     const initialSets = new Map<string, number>();
     mesocycle.days.forEach(day => {
       day[1].forEach(exercise => {
@@ -82,7 +82,6 @@ const Mesocycles: React.FC = () => {
       let currentDayIndex = startDate.getDay();
       let trainingDayFound = false;
 
-      // Find the first training day from the start date
       for (let i = 0; i < 7; i++) {
         const dayName = weekDays[(currentDayIndex + i) % 7];
         if (trainingDays.has(dayName)) {
@@ -106,7 +105,6 @@ const Mesocycles: React.FC = () => {
           const dayExercises = trainingDays.get(dayName);
           const exercisesMap = new Map(dayExercises.map((ex: any) => [ex.exercise, Array(setsPerExercise.get(ex.exercise) || 3).fill({ weight: 0, reps: 0, logged: false })]));
           localStorage.setItem(`workoutExercises_${dayString}`, JSON.stringify(Array.from(exercisesMap.entries())));
-          console.log(dayString);
         } else {
           localStorage.setItem(`workoutExercises_${dayString}`, JSON.stringify([["Rest Day", [{ weight: 0, reps: 0, logged: false }]]]));
         }
@@ -114,11 +112,6 @@ const Mesocycles: React.FC = () => {
       router.push('/workout');
     }
   };
-
-  const options = [
-    { value: 'load', label: 'Load' },
-    { value: 'delete', label: 'Delete' },
-  ];
 
   const handleDropdownSelect = (option: any, name: string) => {
     if (option.value === 'load') {
@@ -130,130 +123,94 @@ const Mesocycles: React.FC = () => {
     setDropdownVisible(null);
   };
 
-  const CustomControl = () => {
-    return (
-      <div className="w-[40px] justify-center flex items-center cursor-pointer">
-        <FaEllipsisV />
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 p-6 bg-gray-100">
-        <div className="max-w-3xl mx-auto flex justify-between items-center">
-          <h2 className="text-2xl font-semibold text-black mb-4">Saved Mesocycles</h2>
+    <div className="min-h-screen bg-gray-100">
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-800">Saved Mesocycles</h2>
           <Link href="/new-mesocycle">
-            <div className="bg-gray-300 text-black px-3 mb-4 text-lg rounded uppercase">+</div>
+            <div className="bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-indigo-700 transition duration-300 flex items-center">
+              <FaPlus className="mr-2" />
+              <span>New</span>
+            </div>
           </Link>
         </div>
 
-        <div className="max-w-3xl mx-auto bg-white p-4 pt-0 rounded shadow-md">
-          <ul>
-            {mesocycles.length === 0 ? (
-              <p>No saved mesocycles</p>
-            ) : (
-              mesocycles.map((mesocycle, index) => (
-                <li key={index} className="border-b border-gray-300 flex justify-between items-center py-4">
-                  <div>
-                    <span className="block text-sm text-gray-600 uppercase">{mesocycle.templateName}</span>
-                    <span className="block font-semibold">{mesocycle.name}</span>
-                    <span className="block text-sm text-gray-600">{mesocycle.days.length} DAYS</span>
+        {mesocycles.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <FaDumbbell className="text-6xl text-gray-300 mx-auto mb-4" />
+            <p className="text-xl text-gray-600">No saved mesocycles</p>
+            <Link href="/new-mesocycle">
+              <div className="mt-4 inline-block bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-indigo-700 transition duration-300">
+                Create Your First Mesocycle
+              </div>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {mesocycles.map((mesocycle, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className="block text-sm font-semibold text-indigo-600 uppercase mb-1">{mesocycle.templateName}</span>
+                      <h3 className="text-xl font-bold text-gray-800">{mesocycle.name}</h3>
+                    </div>
+                    <div className="relative">
+                      <button
+                        className="text-gray-500 hover:text-gray-700"
+                        onClick={() => setDropdownVisible(dropdownVisible === mesocycle.name ? null : mesocycle.name)}
+                      >
+                        <FaEllipsisV />
+                      </button>
+                      {dropdownVisible === mesocycle.name && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                          <button
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                            onClick={() => handleDropdownSelect({ value: 'load' }, mesocycle.name)}
+                          >
+                            Load
+                          </button>
+                          <button
+                            className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
+                            onClick={() => handleDropdownSelect({ value: 'delete' }, mesocycle.name)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="relative">
-                    <button
-                      className="text-gray-600 mb-10"
-                      onClick={() => setDropdownVisible(dropdownVisible === mesocycle.name ? null : mesocycle.name)}
-                    >
-                      <FaEllipsisV />
-                    </button>
-                    {dropdownVisible === mesocycle.name && (
-                      <div className="absolute right-0 -mt-8 w-48 bg-white border border-gray-300 rounded shadow-md z-10">
-                        <button
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                          onClick={() => handleDropdownSelect({ value: 'load' }, mesocycle.name)}
-                        >
-                          Load
-                        </button>
-                        <button
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                          onClick={() => handleDropdownSelect({ value: 'delete' }, mesocycle.name)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                  <div className="flex items-center text-gray-600">
+                    <FaCalendarAlt className="mr-2" />
+                    <span>{mesocycle.days.length} Days</span>
                   </div>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
+                </div>
+                <div className="bg-gray-50 px-6 py-4">
+                  <button
+                    className="w-full bg-indigo-100 text-indigo-700 px-4 py-2 rounded-md hover:bg-indigo-200 transition duration-300"
+                    onClick={() => handleSelectMesocycle(mesocycle)}
+                  >
+                    Configure & Load
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
 
-      {showModal && (
-        <div className="modal" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl mb-4 uppercase">Configure Mesocycle</h3>
-
-            <div className="form-section">
-              <h5 className="font-bold mb-2">Select Mesocycle Duration</h5>
-              <select
-                className="w-full p-2 border rounded mb-4"
-                value={duration}
-                onChange={(e) => setDuration(parseInt(e.target.value, 10))}
-              >
-                <option value={4}>4 Weeks</option>
-                <option value={5}>5 Weeks</option>
-                <option value={6}>6 Weeks</option>
-              </select>
-            </div>
-
-            <div className="form-section">
-              <h5 className="font-bold mb-2">Select Sets per Exercise</h5>
-              {Array.from(new Set(selectedMesocycle?.days.flatMap(day => day[1].map(ex => ex.exercise).filter(exercise => exercise !== null)))).map((exercise, index) => (
-                <div key={index} className="exercise-item flex items-center justify-between mb-2">
-                  <span className="text-sm">{exercise}</span>
-                  <select
-                    className="set-number-select"
-                    value={setsPerExercise.get(exercise!) || 3}
-                    onChange={(e) => setSetsPerExercise(new Map(setsPerExercise).set(exercise!, parseInt(e.target.value, 10)))}
-                  >
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-
-            <div className="form-section">
-              <h5 className="font-bold mb-2 pb-3">Weekly Sets per Muscle Group</h5>
-              {Object.entries(calculateSetsPerMuscleGroup()).map(([muscleGroup, sets], index) => (
-                <div key={index} className="muscle-group-item flex justify-between">
-                  <span className="text-sm">{muscleGroup}</span>
-                  <span className="text-sm">{sets}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="modal-actions">
-              <button
-                className="px-4 py-2 uppercase font-bold text-black rounded"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 uppercase font-bold text-black rounded"
-                onClick={handleLoadMesocycle}
-              >
-                Load
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfigureMesocycleModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        selectedMesocycle={selectedMesocycle}
+        duration={duration}
+        setDuration={setDuration}
+        setsPerExercise={setsPerExercise}
+        setSetsPerExercise={setSetsPerExercise}
+        calculateSetsPerMuscleGroup={calculateSetsPerMuscleGroup}
+        onLoadMesocycle={handleLoadMesocycle}
+      />
     </div>
   );
 };
