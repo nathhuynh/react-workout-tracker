@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!session || !session.user?.id) {
       console.log('No session found or user ID missing, returning 401');
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorised' });
     }
 
     const userId = session.user.id;

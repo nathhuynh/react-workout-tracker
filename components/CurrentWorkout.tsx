@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { useSession } from 'next-auth/react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -49,6 +49,7 @@ const CurrentWorkout: React.FC = () => {
   // const [workoutExerciseOrder, setWorkoutExerciseOrder] = useState<string[]>(Array.from(workoutExercises.keys()));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localNotes, setLocalNotes] = useState(workoutData.notes);
 
   useEffect(() => {
     setIsMounted(true);
@@ -113,6 +114,10 @@ const CurrentWorkout: React.FC = () => {
     };
     saveWorkoutData();
   }, [workoutData, selectedDate, isMounted, session]);
+
+  useEffect(() => {
+    setLocalNotes(workoutData.notes);
+  }, [workoutData.notes]);
 
   const handleAddSet = async (exerciseName: string, type: 'regular' | 'dropset' = 'regular') => {
     setIsLoading(true);
@@ -654,10 +659,13 @@ const CurrentWorkout: React.FC = () => {
             <textarea
               className="w-full p-2 border rounded text-gray-700"
               rows={4}
-              value={workoutData.notes}
+              value={localNotes}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                setWorkoutData(prev => ({ ...prev, notes: e.target.value }))
+                setLocalNotes(e.target.value)
               }
+              onBlur={() => {
+                setWorkoutData(prev => ({ ...prev, notes: localNotes }))
+              }}
             ></textarea>
           </div>
 

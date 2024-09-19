@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FaEllipsisV, FaPlus, FaDumbbell, FaEdit, FaTrashAlt } from 'react-icons/fa';
 import { useExerciseOptions } from '../utils/useExerciseOptions';
 import { fetchCustomExercises, createCustomExercise, updateCustomExercise, deleteCustomExercise } from '../pages/api/customExercises';

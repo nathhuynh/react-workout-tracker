@@ -69,7 +69,7 @@ model Exercise {
   category          String?
   images            String[]
   workoutExercises  WorkoutExercise[]
-  mesocycleExercises MesocycleExercise[]
+  dayExercises DayExercise[]
 }
 
 model CustomExercise {
@@ -149,24 +149,26 @@ model Mesocycle {
   days         Day[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  userId       String   // Changed from Int to String
+  userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([name, userId]) // use a combination of Mesocycle name and userID for Mesocycles
 }
 
 model Day {
-  id          Int                 @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   name        String
-  mesocycle   Mesocycle           @relation(fields: [mesocycleId], references: [id])
+  mesocycle   Mesocycle     @relation(fields: [mesocycleId], references: [id], onDelete: Cascade)
   mesocycleId Int
   order       Int
-  exercises   MesocycleExercise[]
+  exercises   DayExercise[]
 
   @@unique([mesocycleId, order])
 }
 
-model MesocycleExercise {
+model DayExercise {
   id          Int      @id @default(autoincrement())
-  day         Day      @relation(fields: [dayId], references: [id])
+  day         Day      @relation(fields: [dayId], references: [id], onDelete: Cascade)
   dayId       Int
   exercise    Exercise @relation(fields: [exerciseId], references: [id])
   exerciseId  Int

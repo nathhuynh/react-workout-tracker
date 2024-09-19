@@ -1,52 +1,60 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FaEllipsisV, FaPlus, FaDumbbell, FaCalendarAlt } from 'react-icons/fa';
 import ConfigureMesocycleModal from './ConfigureMesocycleModal';
 import '../styles/globals.css';
-
-interface Day {
-  name: string;
-  exercises: { muscleGroup: string, exercise: string | null }[];
-}
-
-interface Mesocycle {
-  name: string;
-  templateName: string;
-  days: [string, { muscleGroup: string; exercise: string | null }[]][];
-}
+import { fetchMesocycles, deleteMesocycle, MesocycleData } from '../pages/api/mesocycleRoutes';
 
 const Mesocycles: React.FC = () => {
-  const [mesocycles, setMesocycles] = useState<Mesocycle[]>([]);
-  const [selectedMesocycle, setSelectedMesocycle] = useState<Mesocycle | null>(null);
+  const [mesocycles, setMesocycles] = useState<MesocycleData[]>([]);
+  const [selectedMesocycle, setSelectedMesocycle] = useState<MesocycleData | null>(null);
   const [duration, setDuration] = useState<number>(4);
   const [showModal, setShowModal] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
   const [setsPerExercise, setSetsPerExercise] = useState<Map<string, number>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const mesocyclesFromStorage = localStorage.getItem('mesocycles');
-    if (mesocyclesFromStorage) {
-      setMesocycles(JSON.parse(mesocyclesFromStorage));
-    }
+    const loadMesocycles = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedMesocycles = await fetchMesocycles();
+        setMesocycles(fetchedMesocycles);
+      } catch (error) {
+        setError('Failed to load mesocycles. Please try again.');
+        console.error('Error fetching mesocycles:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMesocycles();
   }, []);
 
-  const handleDeleteMesocycle = (name: string) => {
-    const updatedMesocycles = mesocycles.filter(mesocycle => mesocycle.name !== name);
-    setMesocycles(updatedMesocycles);
-    localStorage.setItem('mesocycles', JSON.stringify(updatedMesocycles));
+  const handleDeleteMesocycle = async (name: string) => {
+    try {
+      await deleteMesocycle(name);
+      // Update state or refetch mesocycles
+      setMesocycles(prevMesocycles => prevMesocycles.filter(m => m.name !== name));
+    } catch (error) {
+      console.error('Failed to delete mesocycle:', error);
+      // Display error message to the user
+      alert(error instanceof Error ? error.message : 'Failed to delete mesocycle');
+    }
   };
 
-  const handleSelectMesocycle = (mesocycle: Mesocycle) => {
+  const handleSelectMesocycle = (mesocycle: MesocycleData) => {
     setSelectedMesocycle(mesocycle);
     setShowModal(true);
 
     const initialSets = new Map<string, number>();
     mesocycle.days.forEach(day => {
-      day[1].forEach(exercise => {
-        if (exercise.exercise) {
-          initialSets.set(exercise.exercise, setsPerExercise.get(exercise.exercise) || 3);
+      day.exercises.forEach(exercise => {
+        if (exercise.exerciseId) {
+          initialSets.set(exercise.exerciseId.toString(), setsPerExercise.get(exercise.exerciseId.toString()) || 3);
         }
       });
     });
@@ -57,9 +65,9 @@ const Mesocycles: React.FC = () => {
     const setsPerMuscleGroup: { [key: string]: number } = {};
 
     selectedMesocycle?.days.forEach(day => {
-      day[1].forEach(exercise => {
-        if (exercise.exercise && setsPerExercise.has(exercise.exercise)) {
-          const sets = setsPerExercise.get(exercise.exercise) || 0;
+      day.exercises.forEach(exercise => {
+        if (exercise.exerciseId && setsPerExercise.has(exercise.exerciseId.toString())) {
+          const sets = setsPerExercise.get(exercise.exerciseId.toString()) || 0;
           setsPerMuscleGroup[exercise.muscleGroup] = (setsPerMuscleGroup[exercise.muscleGroup] || 0) + sets;
         }
       });
@@ -68,6 +76,7 @@ const Mesocycles: React.FC = () => {
     return setsPerMuscleGroup;
   };
 
+  // TODO - Loading Mesocycles
   const handleLoadMesocycle = () => {
     if (selectedMesocycle) {
       localStorage.setItem('currentMesocycle', JSON.stringify({ mesocycle: selectedMesocycle, duration, setsPerExercise: Array.from(setsPerExercise.entries()) }));
@@ -113,16 +122,16 @@ const Mesocycles: React.FC = () => {
     }
   };
 
-  const handleDropdownSelect = (option: any, name: string) => {
+  const handleDropdownSelect = (option: { value: string }, mesocycleName: string) => {
     if (option.value === 'load') {
-      const mesocycle = mesocycles.find(m => m.name === name);
+      const mesocycle = mesocycles.find(m => m.name === mesocycleName);
       if (mesocycle) handleSelectMesocycle(mesocycle);
     } else if (option.value === 'delete') {
-      handleDeleteMesocycle(name);
+      handleDeleteMesocycle(mesocycleName);
     }
     setDropdownVisible(null);
   };
-
+  
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="container mx-auto px-4 py-8">
@@ -142,7 +151,7 @@ const Mesocycles: React.FC = () => {
             <p className="text-xl text-gray-600">No saved mesocycles</p>
             <Link href="/new-mesocycle">
               <div className="mt-4 inline-block bg-indigo-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-indigo-700 transition duration-300">
-                Create Your First Mesocycle
+                Create Your First MesocycleData
               </div>
             </Link>
           </div>

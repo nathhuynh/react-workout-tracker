@@ -5,7 +5,7 @@ FROM node:22.4.1-alpine as base
 WORKDIR /usr/src/app
 
 # Copy package.json and install dependencies
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy prisma directory
