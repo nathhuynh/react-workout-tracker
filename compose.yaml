@@ -6,7 +6,7 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_WEBPACK_USEPOLLING=1
-      - DATABASE_URL=postgresql://user:password@db:5432/gym_tracker?schema=public
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public
     ports:
       - 3000:3000
     volumes:
@@ -22,9 +22,9 @@ services:
   db:
     image: postgres:14
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=gym_tracker
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
