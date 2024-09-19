@@ -8,13 +8,13 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+const publicRoutes = ['/signup', '/signin', '/forgot-password'];
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { data: session, status } = useSession();
   const isAuthenticated = status === 'authenticated';
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  const publicRoutes = ['/signup', '/signin', '/forgot-password'];
 
   useEffect(() => {
     if (status !== 'loading') {

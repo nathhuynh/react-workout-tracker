@@ -50,7 +50,7 @@ jobs:
     #     docker run --network host -e DATABASE_URL="postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}?schema=public" app:latest npm test
 
     - name: Run linting
-      run: docker run app:latest npm run lint
+      run: docker run app:latest npm run lint -- --config .eslintrc.json --ignore-path .eslintignore
 
     - name: Run type checking
       run: docker run app:latest npx tsc --noEmit

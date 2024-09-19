@@ -2,14 +2,14 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 
+// List of public routes that don't require authentication
+const publicRoutes = ['/signup', '/signin', '/forgot-password']
+
 const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
   const WithAuth: React.FC<P> = (props) => {
     const router = useRouter();
     const { data: session, status } = useSession();
     const isAuthenticated = status === 'authenticated';
-
-    // List of public routes that don't require authentication
-    const publicRoutes = ['/signup', '/signin', '/forgot-password'];
 
     useEffect(() => {
       if (typeof window !== 'undefined') {
